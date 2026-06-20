@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LinguaFlash — local JSON storage version
 
-## Getting Started
+## Setup
 
-First, run the development server:
+1. Make sure your `tsconfig.json` has the `@/*` path alias pointing to `src/*`:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```json
+{
+  "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+If your project doesn't have this, either add it, or replace all `@/...` imports
+in the files below with relative paths (e.g. `../../src/types`).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+2. Install the one new dependency used for image extraction:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm install openai
+```
 
-## Learn More
+(No `mongodb` package needed anymore — storage is a local JSON file.)
 
-To learn more about Next.js, take a look at the following resources:
+3. Add to `.env.local` (project root):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+OPENAI_API_KEY=sk-...
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+4. The data file lives at `data/decks.json` (auto-created on first save, starts as `[]`).
+   Add it to `.gitignore` if you don't want sample data committed:
 
-## Deploy on Vercel
+```
+data/decks.json
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## File map
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| File | Path in your project |
+|---|---|
+| `app/page.tsx` | `app/page.tsx` |
+| `app/page.module.css` | `app/page.module.css` |
+| `app/layout.tsx` | `app/layout.tsx` |
+| `app/globals.css` | `app/globals.css` |
+
+| `app/api/extract-words/route.ts` | `app/api/extract-words/route.ts` |
+| `app/api/decks/route.ts` | `app/api/decks/route.ts` |
+| `app/api/decks/[id]/route.ts` | `app/api/decks/[id]/route.ts` |
+
+| `src/lib/deckStore.ts` | `src/lib/deckStore.ts` |
+
+| `src/types/index.ts` | `src/types/index.ts` |
+
+| `src/components/ImageUploader/*` | `src/components/ImageUploader/*` |
+| `src/components/SaveDeck/*` | `src/components/SaveDeck/*` |
+| `src/components/Flashcards/*` | `src/components/Flashcards/*` |
+
+| `data/decks.json` | `data/decks.json` |

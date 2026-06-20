@@ -1,0 +1,422 @@
+[
+  {
+    "id": "017a9d10-db3c-48e8-b56c-579a11c687ba",
+    "name": "r",
+    "createdAt": "2026-06-19T10:50:50.309Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "known"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "known"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделять",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "known"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "знаменитый",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "d26e2640-e066-4a20-b4ac-f92cd962fa3a",
+    "name": "r",
+    "createdAt": "2026-06-19T10:49:54.505Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "known"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделить",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "знаменитый",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "8f273973-79e4-4a3c-9170-d6e3f92287b4",
+    "name": "k",
+    "createdAt": "2026-06-19T10:45:01.113Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "known"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделять",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "5bce5ddf-5c27-4a12-a70f-b11332c676a6",
+    "name": "s",
+    "createdAt": "2026-06-19T10:40:20.708Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "known"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "known"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделять",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "known"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "3d9201f8-3107-4af3-89d0-91cc4fc6b69e",
+    "name": "s",
+    "createdAt": "2026-06-19T10:37:01.700Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "learning"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделять",
+        "status": "learning"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "learning"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "bffc0060-3fa9-49a6-bdc3-9a960460f598",
+    "name": "yo",
+    "createdAt": "2026-06-19T10:35:55.969Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "learning"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "known"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделить",
+        "status": "learning"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "learning"
+      },
+      {
+        "word": "berühmt",
+        "translation": "знаменитый",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "c27b95a6-5779-4680-841f-95787fd34300",
+    "name": "7",
+    "createdAt": "2026-06-19T09:50:49.584Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "known"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "known"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделять",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "known"
+      },
+      {
+        "word": "ansehen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "511ee9c7-2c10-4652-81e7-3b77cfb37881",
+    "name": "7",
+    "createdAt": "2026-06-19T09:40:42.608Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "learning"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделить",
+        "status": "learning"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "learning"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "fd8a8a63-a529-4d3d-bcaa-71d6ac33c98c",
+    "name": "2 екн",
+    "createdAt": "2026-06-19T09:38:04.840Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "learning"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделять",
+        "status": "learning"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauten",
+        "translation": "посмотреть",
+        "status": "learning"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "ab11f925-30ed-4b83-862e-e91c2c6ffbc4",
+    "name": "1 try",
+    "createdAt": "2026-06-19T09:36:03.224Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "learning"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "rennen",
+        "translation": "бежать",
+        "status": "learning"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "learning"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  }
+]

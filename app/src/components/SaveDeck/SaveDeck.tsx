@@ -1,0 +1,85 @@
+"use client";
+
+import { useState } from "react";
+import { Card, Deck } from "../../models"
+import styles from "./SaveDeck.module.css";
+
+interface Props {
+  cards: Card[];
+  onSaved: (deck: Deck) => void;
+  onBack: () => void;
+}
+
+export default function SaveDeck({ cards, onSaved, onBack }: Props) {
+  const [name, setName] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleSave = async () => {
+    if (!name.trim()) return;
+    setLoading(true);
+    setError(null);
+
+    try {
+      const res = await fetch("/api/decks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, cards }),
+      });
+
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to save");
+      }
+
+      const deck: Deck = await res.json();
+      onSaved(deck);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className={styles.overlay}>
+      <div className={styles.modal}>
+        <h2 className={styles.title}>Name your deck</h2>
+        <p className={styles.subtitle}>{cards.length} cards ready to save</p>
+
+        <input
+          className={styles.input}
+          type="text"
+          placeholder="e.g. Spanish verbs, French food vocab…"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && handleSave()}
+          autoFocus
+          maxLength={60}
+        />
+
+        {error && <p className={styles.error}>{error}</p>}
+
+        <div className={styles.actions}>
+          <button className={styles.btnBack} onClick={onBack} disabled={loading}>
+            ← Back
+          </button>
+          <button
+            className={styles.btnSave}
+            onClick={handleSave}
+            disabled={!name.trim() || loading}
+          >
+            {loading ? (
+              <span className={styles.spinner}>
+                <span className={styles.spinnerDot} />
+                Saving…
+              </span>
+            ) : (
+              "Save & start practice →"
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
