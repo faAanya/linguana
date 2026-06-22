@@ -183,7 +183,10 @@
 }
 
 .settlingScene {
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transition: transform 0.36s cubic-bezier(0.3, 0, 0.6, 1), opacity 0.36s ease-out;
+}
+.cardScene[data-exiting="true"] {
+  opacity: 0;
 }
 
 .cardInner {

@@ -1,5 +1,287 @@
 [
   {
+    "id": "a0e7f3a1-f606-497a-8f3a-8452263d5ba0",
+    "name": "a",
+    "createdAt": "2026-06-21T18:56:51.348Z",
+    "cards": [
+      {
+        "word": "A",
+        "translation": "A",
+        "status": "known"
+      },
+      {
+        "word": "A",
+        "translation": "A",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "4adcca7f-a3df-4540-9469-4583c8d75eb8",
+    "name": "a",
+    "createdAt": "2026-06-20T20:56:45.221Z",
+    "cards": [
+      {
+        "word": "a",
+        "translation": "a",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "c4c39b9a-a656-400a-85ba-8caadcf66303",
+    "name": "л",
+    "createdAt": "2026-06-20T20:50:59.514Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "known"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделить",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "learning"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "0f37f524-1fe2-4f45-ab6b-e3f2dc6fea9b",
+    "name": "ы",
+    "createdAt": "2026-06-20T20:45:47.555Z",
+    "cards": [
+      {
+        "word": "Der Bauch (-e)",
+        "translation": "живот",
+        "status": "known"
+      },
+      {
+        "word": "Die Hose (-n)",
+        "translation": "брюки",
+        "status": "known"
+      },
+      {
+        "word": "Der Rock (-e)",
+        "translation": "юбка",
+        "status": "learning"
+      },
+      {
+        "word": "nachts",
+        "translation": "ночью",
+        "status": "known"
+      },
+      {
+        "word": "bekommen",
+        "translation": "получить",
+        "status": "learning"
+      },
+      {
+        "word": "die Antwort (-en)",
+        "translation": "ответ",
+        "status": "known"
+      },
+      {
+        "word": "das Bild",
+        "translation": "картина",
+        "status": "learning"
+      },
+      {
+        "word": "der Computer",
+        "translation": "комп.",
+        "status": "learning"
+      },
+      {
+        "word": "nie",
+        "translation": "никогда",
+        "status": "known"
+      },
+      {
+        "word": "oft",
+        "translation": "иногда",
+        "status": "known"
+      },
+      {
+        "word": "genau",
+        "translation": "точно",
+        "status": "learning"
+      },
+      {
+        "word": "sauber",
+        "translation": "чистый",
+        "status": "known"
+      },
+      {
+        "word": "schlimm",
+        "translation": "очень плохой",
+        "status": "known"
+      },
+      {
+        "word": "schmutzig",
+        "translation": "грязный",
+        "status": "learning"
+      },
+      {
+        "word": "vergessen",
+        "translation": "забыть",
+        "status": "known"
+      },
+      {
+        "word": "weinen",
+        "translation": "плакать",
+        "status": "learning"
+      },
+      {
+        "word": "einige",
+        "translation": "несколько",
+        "status": "known"
+      },
+      {
+        "word": "die Schule",
+        "translation": "школа",
+        "status": "learning"
+      },
+      {
+        "word": "die Uni",
+        "translation": "унив.",
+        "status": "known"
+      },
+      {
+        "word": "der Verkäufer",
+        "translation": "продавец",
+        "status": "learning"
+      },
+      {
+        "word": "hässlich",
+        "translation": "некрасивый",
+        "status": "known"
+      },
+      {
+        "word": "die Gesundheit",
+        "translation": "здоровье",
+        "status": "known"
+      },
+      {
+        "word": "der Hut",
+        "translation": "шляпа",
+        "status": "known"
+      },
+      {
+        "word": "versprechen",
+        "translation": "обещать",
+        "status": "known"
+      }
+    ]
+  },
+  {
+    "id": "9ce65f37-f12f-4312-9a95-a95f35db8213",
+    "name": "g",
+    "createdAt": "2026-06-20T20:37:35.306Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "known"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделить",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  },
+  {
+    "id": "a3145b19-70bb-4dcb-b0df-3e0995979fba",
+    "name": "d",
+    "createdAt": "2026-06-20T20:33:53.437Z",
+    "cards": [
+      {
+        "word": "begeistern",
+        "translation": "вдохновить",
+        "status": "known"
+      },
+      {
+        "word": "wegen",
+        "translation": "из-за",
+        "status": "learning"
+      },
+      {
+        "word": "unterschiedlich",
+        "translation": "различный",
+        "status": "learning"
+      },
+      {
+        "word": "trennen",
+        "translation": "разделить",
+        "status": "known"
+      },
+      {
+        "word": "der Funk",
+        "translation": "радио",
+        "status": "learning"
+      },
+      {
+        "word": "anschauen",
+        "translation": "посмотреть",
+        "status": "known"
+      },
+      {
+        "word": "berühmt",
+        "translation": "известный",
+        "status": "learning"
+      }
+    ]
+  },
+  {
     "id": "017a9d10-db3c-48e8-b56c-579a11c687ba",
     "name": "r",
     "createdAt": "2026-06-19T10:50:50.309Z",
