@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Card, Deck } from "../../models"
+import { PracticeCard, PracticeDeck } from "@/app/src/models/index";
 import styles from "./SaveDeck.module.css";
 
 interface Props {
-  cards: Card[];
-  onSaved: (deck: Deck) => void;
+  cards: PracticeCard[];
+  onSaved: (deck: PracticeDeck) => void;
   onBack: () => void;
 }
 
@@ -32,7 +32,7 @@ export default function SaveDeck({ cards, onSaved, onBack }: Props) {
         throw new Error(data.error ?? "Failed to save");
       }
 
-      const deck: Deck = await res.json();
+      const deck: PracticeDeck = await res.json();
       onSaved(deck);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");

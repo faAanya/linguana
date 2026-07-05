@@ -1,27 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import ImageUploader from "./src/components/ImageUploader/ImageUploader";
-import SaveDeck from "./src/components/SaveDeck/SaveDeck";
-import Flashcards from "./src/components/FlashCards/FlashCards";
-import { Card, Deck } from "@/app/src/models/index";
+import ImageUploader from "@/app/src/components/ImageUploader/ImageUploader";
+import SaveDeck from "@/app/src/components/SaveDeck/SaveDeck";
+import Flashcards from "@/app/src/components/FlashCards/FlashCards";
+import { PracticeCard, PracticeDeck } from "@/app/src/models";
 import styles from "./page.module.css";
 
 type Step = "upload" | "save" | "practice";
 
 export default function Home() {
   const [step, setStep] = useState<Step>("upload");
-  const [pendingCards, setPendingCards] = useState<Card[]>([]);
-  const [activeDeck, setActiveDeck] = useState<Deck | null>(null);
+  const [pendingCards, setPendingCards] = useState<PracticeCard[]>([]);
+  const [activeDeck, setActiveDeck] = useState<PracticeDeck | null>(null);
 
   const handleConfirmed = (pairs: { word: string; translation: string }[]) => {
     setPendingCards(
-      pairs.map((p) => ({ word: p.word, translation: p.translation, status: "learning" }))
+      pairs.map((p) => ({
+        word: p.word,
+        translation: p.translation,
+        status: "learning" as const,
+      }))
     );
     setStep("save");
   };
 
-  const handleSaved = (deck: Deck) => {
+  const handleSaved = (deck: PracticeDeck) => {
     setActiveDeck(deck);
     setStep("practice");
   };

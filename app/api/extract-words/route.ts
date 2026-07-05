@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+function getOpenAI() {
+  return new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+}
 
 const IMAGE_PROMPT = `Please read this image carefully. It contains vocabulary entries in the format "word - translation" (one per line).
 
@@ -77,7 +79,7 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: "No text provided" }, { status: 400 });
       }
 
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: "gpt-4o",
         messages: [
           {
@@ -119,7 +121,7 @@ export async function POST(request: NextRequest) {
       | "image/gif"
       | "image/webp";
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-4o",
       messages: [
         {
