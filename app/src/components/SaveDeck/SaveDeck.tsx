@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PracticeCard, PracticeDeck } from "@/app/src/models/index";
+import { PracticeCard, PracticeDeck } from "@/app/src/models/domain";
 import styles from "./SaveDeck.module.css";
 
 interface Props {

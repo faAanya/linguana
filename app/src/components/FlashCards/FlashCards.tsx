@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect } from "react";
-import { PracticeCard, PracticeDeck } from "@/app/src/models/index";
+import { PracticeCard, PracticeDeck } from "@/app/src/models/domain";
 import styles from "./FlashCards.module.css";
 
 interface Props {

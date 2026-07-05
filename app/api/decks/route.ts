@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/app/src/data/DeckStore";
+import { ObjectId } from "mongodb";
+import { getDb } from "@/app/src/data/mongodb";
+import { getSessionUser, refreshSession } from "@/app/src/data/jwt";
 
-// GET /api/decks — list all decks for now (no auth yet, returns all)
+async function requireUser() {
+  let session = await getSessionUser();
+  if (!session) session = await refreshSession();
+  return session;
+}
+
+// GET /api/decks — list decks belonging to the logged-in user
 export async function GET() {
   try {
+    const session = await requireUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const db = await getDb();
     const decks = await db
       .collection("userDecks")
-      .find({})
+      .find({ userId: new ObjectId(session.userId) })
       .sort({ createdAt: -1 })
       .toArray();
 
@@ -25,9 +38,14 @@ export async function GET() {
   }
 }
 
-// POST /api/decks — create a new deck with its flashcards
+// POST /api/decks — create a new deck owned by the logged-in user
 export async function POST(request: NextRequest) {
   try {
+    const session = await requireUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { name, cards } = await request.json();
 
     if (!name?.trim()) {
@@ -39,9 +57,10 @@ export async function POST(request: NextRequest) {
 
     const db = await getDb();
     const now = new Date();
+    const userId = new ObjectId(session.userId);
 
-    // Insert the deck
     const deckResult = await db.collection("userDecks").insertOne({
+      userId,
       name: name.trim(),
       sourceLanguage: "unknown",
       targetLanguage: "unknown",
@@ -52,9 +71,9 @@ export async function POST(request: NextRequest) {
 
     const deckId = deckResult.insertedId;
 
-    // Insert all flashcards linked to this deck
     const flashcards = cards.map((c: { word: string; translation: string }) => ({
       userDeckId: deckId,
+      userId,
       word: c.word,
       translation: c.translation,
       status: "learning" as const,
@@ -64,7 +83,6 @@ export async function POST(request: NextRequest) {
 
     await db.collection("flashcards").insertMany(flashcards);
 
-    // Return the full deck with its cards (same shape the frontend expects)
     const insertedCards = await db
       .collection("flashcards")
       .find({ userDeckId: deckId })

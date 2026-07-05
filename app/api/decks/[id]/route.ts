@@ -1,18 +1,34 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
-import { getDb } from "@/app/src/data/DeckStore";
+import { getDb } from "@/app/src/data/mongodb";
+import { getSessionUser, refreshSession } from "@/app/src/data/jwt";
 
-// GET /api/decks/:id — get one deck with all its flashcards
+async function requireUser() {
+  let session = await getSessionUser();
+  if (!session) session = await refreshSession();
+  return session;
+}
+
+// GET /api/decks/:id — get one deck with cards (must belong to user)
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const db = await getDb();
     const deckId = new ObjectId(id);
+    const userId = new ObjectId(session.userId);
 
-    const deck = await db.collection("userDecks").findOne({ _id: deckId });
+    const deck = await db
+      .collection("userDecks")
+      .findOne({ _id: deckId, userId });
+
     if (!deck) {
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
@@ -20,6 +36,7 @@ export async function GET(
     const cards = await db
       .collection("flashcards")
       .find({ userDeckId: deckId })
+      .sort({ createdAt: 1 })
       .toArray();
 
     return NextResponse.json({
@@ -39,12 +56,17 @@ export async function GET(
   }
 }
 
-// PATCH /api/decks/:id — update one card's status by its index
+// PATCH /api/decks/:id — update one card's status (must belong to user)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const { cardIndex, status } = await request.json();
 
@@ -54,8 +76,17 @@ export async function PATCH(
 
     const db = await getDb();
     const deckId = new ObjectId(id);
+    const userId = new ObjectId(session.userId);
 
-    // Fetch cards in stable insertion order, then update the one at cardIndex
+    // Verify deck belongs to user before touching its cards
+    const deck = await db
+      .collection("userDecks")
+      .findOne({ _id: deckId, userId });
+
+    if (!deck) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
+
     const cards = await db
       .collection("flashcards")
       .find({ userDeckId: deckId })
@@ -78,15 +109,30 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/decks/:id — delete deck and all its flashcards
+// DELETE /api/decks/:id — delete deck and its cards (must belong to user)
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const session = await requireUser();
+    if (!session) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const { id } = await params;
     const db = await getDb();
     const deckId = new ObjectId(id);
+    const userId = new ObjectId(session.userId);
+
+    // Verify ownership before deleting
+    const deck = await db
+      .collection("userDecks")
+      .findOne({ _id: deckId, userId });
+
+    if (!deck) {
+      return NextResponse.json({ error: "Deck not found" }, { status: 404 });
+    }
 
     await db.collection("flashcards").deleteMany({ userDeckId: deckId });
     await db.collection("userDecks").deleteOne({ _id: deckId });

@@ -1,15 +1,5 @@
 import { ObjectId } from "mongodb";
 
-// ── User ─────────────────────────────────────────────────────
-export interface User {
-  _id?: ObjectId;
-  name: string;
-  email: string;
-  passwordHash: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
-
 // ── Word (global dictionary) ──────────────────────────────────
 // One document per unique word. Translations into multiple target
 // languages are stored as a map so one word can serve many language pairs.
