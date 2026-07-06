@@ -1,30 +1,53 @@
 /**
- * Run once to set up all collections, indexes, and validators.
- * Or inside docker:
- *   docker compose exec app npx ts-node scripts/initDb.ts
+ * Sets up all collections, indexes, and validators.
+ * Safe to run multiple times — skips existing collections and indexes.
+ *
+ * Local:
+ *   MONGODB_URI=... MONGO_DB_NAME=linguaflash npx ts-node --transpileOnly scripts/initDb.ts
+ *
+ * Docker:
+ *   docker compose exec app npx ts-node --transpileOnly scripts/initDb.ts
  */
 
-import { MongoClient } from "mongodb";
+import { Db, MongoClient } from "mongodb";
 
 const uri = process.env.MONGODB_URI!;
-const dbName = process.env.MONGO_DB_NAME ?? "linguana";
+const dbName = process.env.MONGO_DB_NAME ?? "linguaflash";
+
+// Skips if collection already exists (code 48 = NamespaceExists)
+async function createCollectionSafe(
+  db: Db,
+  name: string,
+  options: Parameters<Db["createCollection"]>[1] = {}
+) {
+  try {
+    await db.createCollection(name, options);
+  } catch (err: any) {
+    if (err.code === 48) {
+      console.log(`  ↩ ${name} already exists, skipping`);
+    } else {
+      throw err;
+    }
+  }
+}
 
 async function main() {
   const client = new MongoClient(uri);
   await client.connect();
   const db = client.db(dbName);
 
-  console.log(`Connected to database: ${dbName}`);
+  console.log(`Connected to database: ${dbName}\n`);
 
   // ── users ────────────────────────────────────────────────────
-  await db.createCollection("users", {
+  await createCollectionSafe(db, "users", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
-        required: ["email", "name", "createdAt", "updatedAt"],
+        required: ["email", "name", "passwordHash", "createdAt", "updatedAt"],
         properties: {
           email: { bsonType: "string" },
           name: { bsonType: "string" },
+          passwordHash: { bsonType: "string" },
           createdAt: { bsonType: "date" },
           updatedAt: { bsonType: "date" },
         },
@@ -37,7 +60,7 @@ async function main() {
   console.log("✓ users");
 
   // ── words ────────────────────────────────────────────────────
-  await db.createCollection("words", {
+  await createCollectionSafe(db, "words", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -52,15 +75,13 @@ async function main() {
     },
   });
   await db.collection("words").createIndexes([
-    // Fast lookup of a specific word in a language
     { key: { value: 1, language: 1 }, unique: true, name: "unique_word_language" },
-    // Browse/search words by language
     { key: { language: 1 }, name: "idx_language" },
   ]);
   console.log("✓ words");
 
   // ── deckTemplates ────────────────────────────────────────────
-  await db.createCollection("deckTemplates", {
+  await createCollectionSafe(db, "deckTemplates", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -80,14 +101,13 @@ async function main() {
   });
   await db.collection("deckTemplates").createIndexes([
     { key: { createdByUserId: 1 }, name: "idx_created_by" },
-    // Only index public templates (partial index, much smaller)
     { key: { isPublic: 1, createdAt: -1 }, name: "idx_public_decks", partialFilterExpression: { isPublic: true } },
     { key: { sourceLanguage: 1, targetLanguage: 1 }, name: "idx_languages" },
   ]);
   console.log("✓ deckTemplates");
 
   // ── userDecks ────────────────────────────────────────────────
-  await db.createCollection("userDecks", {
+  await createCollectionSafe(db, "userDecks", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -105,15 +125,13 @@ async function main() {
     },
   });
   await db.collection("userDecks").createIndexes([
-    // All decks for a user, newest first
     { key: { userId: 1, createdAt: -1 }, name: "idx_user_decks" },
-    // Trace which template a deck was copied from
     { key: { copiedFromTemplateId: 1 }, name: "idx_copied_from", sparse: true },
   ]);
   console.log("✓ userDecks");
 
   // ── flashcards ───────────────────────────────────────────────
-  await db.createCollection("flashcards", {
+  await createCollectionSafe(db, "flashcards", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -130,19 +148,15 @@ async function main() {
     },
   });
   await db.collection("flashcards").createIndexes([
-    // All cards in a deck
     { key: { userDeckId: 1 }, name: "idx_deck_cards" },
-    // All cards for a specific word across all decks
     { key: { wordId: 1 }, name: "idx_word_cards" },
-    // Filter by status within a deck (e.g. "show only learning cards")
     { key: { userDeckId: 1, status: 1 }, name: "idx_deck_status" },
-    // A word should appear only once per deck
     { key: { userDeckId: 1, wordId: 1 }, unique: true, name: "unique_card_in_deck" },
   ]);
   console.log("✓ flashcards");
 
   // ── userWords ────────────────────────────────────────────────
-  await db.createCollection("userWords", {
+  await createCollectionSafe(db, "userWords", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -160,17 +174,14 @@ async function main() {
     },
   });
   await db.collection("userWords").createIndexes([
-    // A user tracks each word only once (cross-deck)
     { key: { userId: 1, wordId: 1 }, unique: true, name: "unique_user_word" },
-    // Words due for spaced-repetition review
     { key: { userId: 1, nextReviewAt: 1 }, name: "idx_review_queue", sparse: true },
-    // All known words for a user
     { key: { userId: 1, status: 1 }, name: "idx_user_status" },
   ]);
   console.log("✓ userWords");
 
   // ── sourceTexts ──────────────────────────────────────────────
-  await db.createCollection("sourceTexts", {
+  await createCollectionSafe(db, "sourceTexts", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -194,7 +205,7 @@ async function main() {
   console.log("✓ sourceTexts");
 
   // ── tests ────────────────────────────────────────────────────
-  await db.createCollection("tests", {
+  await createCollectionSafe(db, "tests", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
@@ -213,12 +224,11 @@ async function main() {
   await db.collection("tests").createIndexes([
     { key: { userId: 1, createdAt: -1 }, name: "idx_user_tests" },
     { key: { userDeckId: 1 }, name: "idx_deck_tests" },
-    // Only index completed tests (partial index)
     { key: { userId: 1, completedAt: -1 }, name: "idx_completed_tests", partialFilterExpression: { completedAt: { $exists: true } } },
   ]);
   console.log("✓ tests");
 
-  console.log("\n✅ All collections and indexes created successfully.");
+  console.log("\n✅ All collections and indexes ready.");
   await client.close();
 }
 

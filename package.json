@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "postbuild": "npx ts-node --transpileOnly scripts/initDb.ts",
     "start": "next start",
     "lint": "eslint"
   },
