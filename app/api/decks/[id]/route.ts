@@ -9,7 +9,7 @@ async function requireUser() {
   return session;
 }
 
-// GET /api/decks/:id — get one deck with cards (must belong to user)
+// GET /api/decks/:id — get one deck with cards joined from words collection
 export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -33,10 +33,22 @@ export async function GET(
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
+    // Join flashcards → words to get word text back
     const cards = await db
       .collection("flashcards")
-      .find({ userDeckId: deckId })
-      .sort({ createdAt: 1 })
+      .aggregate([
+        { $match: { userDeckId: deckId } },
+        { $sort: { createdAt: 1 } },
+        {
+          $lookup: {
+            from: "words",
+            localField: "wordId",
+            foreignField: "_id",
+            as: "wordDoc",
+          },
+        },
+        { $unwind: "$wordDoc" },
+      ])
       .toArray();
 
     return NextResponse.json({
@@ -45,8 +57,11 @@ export async function GET(
       createdAt: deck.createdAt,
       cards: cards.map((c) => ({
         _id: c._id.toString(),
-        word: c.word,
-        translation: c.translation,
+        word: c.wordDoc.value,
+        translation:
+          c.customTranslation ??
+          c.wordDoc.translations?.unknown?.[0] ??
+          "",
         status: c.status,
       })),
     });
@@ -56,7 +71,7 @@ export async function GET(
   }
 }
 
-// PATCH /api/decks/:id — update one card's status (must belong to user)
+// PATCH /api/decks/:id — update one card's status (ownership checked)
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -78,7 +93,6 @@ export async function PATCH(
     const deckId = new ObjectId(id);
     const userId = new ObjectId(session.userId);
 
-    // Verify deck belongs to user before touching its cards
     const deck = await db
       .collection("userDecks")
       .findOne({ _id: deckId, userId });
@@ -109,7 +123,7 @@ export async function PATCH(
   }
 }
 
-// DELETE /api/decks/:id — delete deck and its cards (must belong to user)
+// DELETE /api/decks/:id — delete deck and its flashcards (ownership checked)
 export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -125,7 +139,6 @@ export async function DELETE(
     const deckId = new ObjectId(id);
     const userId = new ObjectId(session.userId);
 
-    // Verify ownership before deleting
     const deck = await db
       .collection("userDecks")
       .findOne({ _id: deckId, userId });
@@ -134,6 +147,9 @@ export async function DELETE(
       return NextResponse.json({ error: "Deck not found" }, { status: 404 });
     }
 
+    // Note: we only delete the flashcards and the deck.
+    // Word documents in the global words collection are never deleted
+    // since they may be referenced by other users' decks.
     await db.collection("flashcards").deleteMany({ userDeckId: deckId });
     await db.collection("userDecks").deleteOne({ _id: deckId });
 

@@ -38,7 +38,7 @@ export async function GET() {
   }
 }
 
-// POST /api/decks — create a new deck owned by the logged-in user
+// POST /api/decks — normalized: upsert words, create flashcards with wordId
 export async function POST(request: NextRequest) {
   try {
     const session = await requireUser();
@@ -46,7 +46,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { name, cards } = await request.json();
+    const { name, cards } = await request.json() as {
+      name: string;
+      cards: { word: string; translation: string }[];
+    };
 
     if (!name?.trim()) {
       return NextResponse.json({ error: "Deck name is required" }, { status: 400 });
@@ -59,6 +62,34 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const userId = new ObjectId(session.userId);
 
+    // ── Step 1: upsert each word into the global words collection ──
+    // Language is unknown at this point (mixed deck), so we use "unknown".
+    // The unique index on {value, language} ensures no duplicates.
+    // We store the translation as a map: { unknown: [translation] }
+    // so the schema stays consistent with multi-language words later.
+    const wordIds: ObjectId[] = [];
+
+    for (const card of cards) {
+      const wordValue = card.word.trim();
+      const translationValue = card.translation.trim();
+
+      const result = await db.collection("words").findOneAndUpdate(
+        { value: wordValue, language: "unknown" },
+        {
+          $setOnInsert: {
+            value: wordValue,
+            language: "unknown",
+            translations: { unknown: [translationValue] },
+            createdAt: now,
+          },
+        },
+        { upsert: true, returnDocument: "after" }
+      );
+
+      wordIds.push(result!._id as ObjectId);
+    }
+
+    // ── Step 2: create the deck ────────────────────────────────────
     const deckResult = await db.collection("userDecks").insertOne({
       userId,
       name: name.trim(),
@@ -71,11 +102,14 @@ export async function POST(request: NextRequest) {
 
     const deckId = deckResult.insertedId;
 
-    const flashcards = cards.map((c: { word: string; translation: string }) => ({
+    // ── Step 3: create flashcards linking deck → word ──────────────
+    // customTranslation stores the user's version of the translation.
+    // The global Word document is never modified by user edits.
+    const flashcards = cards.map((card, i) => ({
       userDeckId: deckId,
       userId,
-      word: c.word,
-      translation: c.translation,
+      wordId: wordIds[i],
+      customTranslation: card.translation.trim(),
       status: "learning" as const,
       createdAt: now,
       updatedAt: now,
@@ -83,9 +117,22 @@ export async function POST(request: NextRequest) {
 
     await db.collection("flashcards").insertMany(flashcards);
 
+    // ── Step 4: return PracticeDeck shape for the frontend ─────────
+    // Join words back so the frontend gets word + translation strings.
     const insertedCards = await db
       .collection("flashcards")
-      .find({ userDeckId: deckId })
+      .aggregate([
+        { $match: { userDeckId: deckId } },
+        {
+          $lookup: {
+            from: "words",
+            localField: "wordId",
+            foreignField: "_id",
+            as: "wordDoc",
+          },
+        },
+        { $unwind: "$wordDoc" },
+      ])
       .toArray();
 
     return NextResponse.json({
@@ -94,8 +141,12 @@ export async function POST(request: NextRequest) {
       createdAt: now,
       cards: insertedCards.map((c) => ({
         _id: c._id.toString(),
-        word: c.word,
-        translation: c.translation,
+        word: c.wordDoc.value,
+        // Prefer the user's customTranslation, fall back to global word translation
+        translation:
+          c.customTranslation ??
+          c.wordDoc.translations?.unknown?.[0] ??
+          "",
         status: c.status,
       })),
     });
