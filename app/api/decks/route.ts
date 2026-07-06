@@ -150,8 +150,9 @@ export async function POST(request: NextRequest) {
         status: c.status,
       })),
     });
-  } catch (err) {
-    console.error("Create deck error:", err);
-    return NextResponse.json({ error: "Failed to save deck" }, { status: 500 });
-  }
+  } catch (err: any) {
+  console.error("Create deck error:", JSON.stringify(err?.errInfo?.details, null, 2));
+  console.error("Create deck error:", err);
+  return NextResponse.json({ error: "Failed to save deck" }, { status: 500 });
+}
 }
