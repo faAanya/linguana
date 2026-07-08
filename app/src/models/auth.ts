@@ -4,7 +4,6 @@ export interface User {
   _id?: ObjectId;
   email: string;
   name: string;
-  passwordHash: string;
   createdAt: Date;
   updatedAt: Date;
 }

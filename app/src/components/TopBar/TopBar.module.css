@@ -4,9 +4,9 @@
   left: 0;
   right: 0;
   height: 56px;
-  background: rgba(15, 23, 42, 0.85);
+  background: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(12px);
-  border-bottom: 1px solid #1e293b;
+  border-bottom: 1px solid var(--gray-200);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,10 +18,10 @@
   font-size: 1rem;
   font-weight: 800;
   letter-spacing: -0.02em;
-  text-decoration: none;
-  cursor: pointer;
-  background: linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  text-decoration: none;
+  cursor: pointer;
 }

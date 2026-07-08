@@ -1,19 +1,18 @@
 .loginBtn {
   padding: 0.5rem 1.125rem;
   border-radius: 8px;
-  border: 1px solid #334155;
-  background: transparent;
-  color: #94a3b8;
+  border: none;
+  background: var(--green-500);
+  color: #fff;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: border-color 0.15s, color 0.15s;
+  transition: background 0.15s;
 }
 
 .loginBtn:hover {
-  border-color: #6366f1;
-  color: #a5b4fc;
+  background: var(--green-600);
 }
 
 /* ── Avatar button ───────────────────────────────────────── */
@@ -25,7 +24,7 @@
   width: 36px;
   height: 36px;
   border-radius: 50%;
-  background: #6366f1;
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
   color: #fff;
   font-size: 0.8125rem;
   font-weight: 700;
@@ -40,7 +39,7 @@
 }
 
 .avatar:hover {
-  opacity: 0.88;
+  opacity: 0.9;
   transform: scale(1.05);
 }
 
@@ -50,12 +49,12 @@
   top: calc(100% + 0.5rem);
   right: 0;
   min-width: 200px;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 12px;
   padding: 0.375rem;
   z-index: 50;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 30px rgba(17, 24, 39, 0.12);
   animation: fadeIn 0.12s ease;
 }
 
@@ -71,13 +70,13 @@
 .dropdownName {
   font-size: 0.9rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .dropdownEmail {
   font-size: 0.8rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0.125rem 0 0;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -86,7 +85,7 @@
 
 .dropdownDivider {
   height: 1px;
-  background: #334155;
+  background: var(--gray-200);
   margin: 0.375rem 0;
 }
 
@@ -99,7 +98,7 @@
   border-radius: 8px;
   border: none;
   background: transparent;
-  color: #94a3b8;
+  color: var(--text-secondary);
   font-size: 0.875rem;
   font-weight: 500;
   font-family: inherit;
@@ -109,11 +108,11 @@
 }
 
 .dropdownItem:hover {
-  background: rgba(99, 102, 241, 0.1);
-  color: #e2e8f0;
+  background: var(--green-100);
+  color: var(--green-700);
 }
 
 .dropdownItemDanger:hover {
-  background: rgba(239, 68, 68, 0.1);
-  color: #f87171;
+  background: var(--red-100);
+  color: var(--red-500);
 }

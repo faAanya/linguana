@@ -1,11 +1,25 @@
 .main {
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--bg-page);
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 3rem 1.25rem 4rem;
+  padding: 5rem 1.25rem 4rem;
   gap: 2.5rem;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-top: 30vh;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
 }
 
 .header {
@@ -20,9 +34,9 @@
   display: inline-block;
   padding: 0.25rem 0.875rem;
   border-radius: 99px;
-  background: rgba(99, 102, 241, 0.15);
-  border: 1px solid rgba(99, 102, 241, 0.35);
-  color: #a5b4fc;
+  background: var(--green-100);
+  border: 1px solid var(--green-500);
+  color: var(--green-700);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.08em;
@@ -32,10 +46,9 @@
 .title {
   font-size: clamp(2rem, 5vw, 3rem);
   font-weight: 800;
-  color: #f8fafc;
   margin: 0;
   letter-spacing: -0.02em;
-  background: linear-gradient(135deg, #f8fafc 0%, #a5b4fc 100%);
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -43,7 +56,7 @@
 
 .subtitle {
   font-size: 1rem;
-  color: #64748b;
+  color: var(--text-muted);
   max-width: 480px;
   line-height: 1.6;
   margin: 0;
@@ -53,19 +66,20 @@
 .successCard {
   width: 100%;
   max-width: 600px;
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 16px;
   padding: 2rem;
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
 }
 
 .successText {
   font-size: 1rem;
   font-weight: 600;
-  color: #34d399;
+  color: var(--green-600);
   margin: 0;
 }
 
@@ -86,23 +100,23 @@
   gap: 0.75rem;
   padding: 0.5rem 0.875rem;
   border-radius: 8px;
-  background: #0f172a;
+  background: var(--gray-100);
   font-family: "JetBrains Mono", monospace;
   font-size: 0.875rem;
 }
 
 .word {
-  color: #a5b4fc;
+  color: var(--indigo-600);
   font-weight: 600;
   flex: 1;
 }
 
 .arrow {
-  color: #475569;
+  color: var(--gray-400);
 }
 
 .translation {
-  color: #34d399;
+  color: var(--green-600);
   flex: 1;
 }
 
@@ -111,8 +125,8 @@
   padding: 0.625rem 1.25rem;
   border-radius: 8px;
   background: transparent;
-  border: 1px solid #334155;
-  color: #94a3b8;
+  border: 1px solid var(--gray-200);
+  color: var(--text-secondary);
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
@@ -121,6 +135,6 @@
 }
 
 .resetBtn:hover {
-  border-color: #6366f1;
-  color: #a5b4fc;
+  border-color: var(--green-500);
+  color: var(--green-600);
 }

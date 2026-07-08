@@ -1,6 +1,6 @@
 .main {
   min-height: 100vh;
-  background: #0f172a;
+  background: var(--bg-page);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -19,14 +19,14 @@
 .title {
   font-size: clamp(1.75rem, 4vw, 2.25rem);
   font-weight: 800;
-  color: #f8fafc;
+  color: var(--indigo-600);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
 .subtitle {
   font-size: 0.9rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
 }
 
@@ -40,20 +40,22 @@
 }
 
 .card {
-  background: #1e293b;
-  border: 1px solid #334155;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
   border-radius: 14px;
   padding: 1.25rem 1.5rem;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
   cursor: pointer;
-  transition: border-color 0.15s, transform 0.15s;
+  transition: border-color 0.15s, transform 0.15s, box-shadow 0.15s;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
 }
 
 .card:hover {
-  border-color: #6366f1;
+  border-color: var(--green-500);
   transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.12);
 }
 
 .cardTop {
@@ -66,7 +68,7 @@
 .cardName {
   font-size: 1rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: var(--text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -75,24 +77,24 @@
 .cardCount {
   font-size: 0.75rem;
   font-weight: 600;
-  color: #a5b4fc;
+  color: var(--teal-500);
   flex-shrink: 0;
-  background: rgba(99, 102, 241, 0.12);
+  background: var(--sky-100);
   padding: 0.2rem 0.5rem;
   border-radius: 99px;
 }
 
 .cardDate {
   font-size: 0.8rem;
-  color: #475569;
+  color: var(--gray-400);
 }
 
 /* ── Empty state ─────────────────────────────────────────── */
 .empty {
   width: 100%;
   max-width: 720px;
-  background: #1e293b;
-  border: 1px dashed #334155;
+  background: var(--bg-hero);
+  border: 1px dashed var(--indigo-100);
   border-radius: 16px;
   padding: 3rem 2rem;
   text-align: center;
@@ -100,26 +102,26 @@
 
 .emptyText {
   font-size: 0.9375rem;
-  color: #64748b;
+  color: var(--text-muted);
   margin: 0;
 }
 
 .emptyLink {
-  color: #a5b4fc;
+  color: var(--teal-500);
   text-decoration: none;
   font-weight: 600;
 }
 
 .emptyLink:hover {
-  color: #6366f1;
+  color: var(--green-600);
 }
 
 /* ── States ──────────────────────────────────────────────── */
 .spinner {
   width: 32px;
   height: 32px;
-  border: 3px solid #1e293b;
-  border-top-color: #6366f1;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--green-500);
   border-radius: 50%;
   animation: spin 0.7s linear infinite;
   margin-top: 30vh;
@@ -130,6 +132,6 @@
 }
 
 .error {
-  color: #fca5a5;
+  color: var(--red-500);
   font-size: 0.9rem;
 }

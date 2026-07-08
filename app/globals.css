@@ -1,5 +1,46 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap");
 
+:root {
+  /* ── Linguana brand ── */
+  --green-700: #15803d;
+  --green-600: #16a34a;
+  --green-500: #22c55e;
+  --green-100: #dcfce7;
+  --lime-500: #a3e635;
+  --lime-100: #ecfccb;
+  --teal-500: #14b8a6;
+  --sky-400: #38bdf8;
+  --sky-100: #e0f2fe;
+  --indigo-700: #3730a3;
+  --indigo-600: #4338ca;
+  --indigo-100: #e0e7ff;
+  --amber-400: #fbbf24;
+  --amber-100: #fef3c7;
+  --red-500: #ef4444;
+  --red-100: #fee2e2;
+  --purple-500: #8b5cf6;
+
+  /* ── Neutrals ── */
+  --white: #ffffff;
+  --gray-50: #fafafa;
+  --gray-100: #f3f4f6;
+  --gray-200: #e5e7eb;
+  --gray-400: #9ca3af;
+  --gray-700: #374151;
+  --gray-900: #111827;
+
+  /* ── Text ── */
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+
+  /* ── Surfaces ── */
+  --bg-page: #fafafa;
+  --bg-hero: #f3f4ff;
+  --bg-card: #ffffff;
+  --border-card: #e5e7eb;
+}
+
 *,
 *::before,
 *::after {
@@ -11,8 +52,8 @@ body {
   margin: 0;
   padding: 0;
   font-family: "Inter", system-ui, -apple-system, sans-serif;
-  background: #0f172a;
-  color: #e2e8f0;
+  background: var(--bg-page);
+  color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -20,17 +61,17 @@ body {
   width: 6px;
 }
 ::-webkit-scrollbar-track {
-  background: #1e293b;
+  background: var(--gray-100);
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: var(--gray-200);
   border-radius: 3px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #475569;
+  background: var(--gray-400);
 }
 
 :focus-visible {
-  outline: 2px solid #6366f1;
+  outline: 2px solid var(--green-500);
   outline-offset: 2px;
 }
