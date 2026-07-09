@@ -74,22 +74,18 @@ export default function ProfilePage() {
           <p className={styles.subtitle}>{user?.name} · {user?.email}</p>
         </div>
 
-        <div className={styles.section}>
-          <LanguagePicker
-            label="I speak"
-            hint="your native language(s)"
-            selected={native}
-            onChange={setNative}
-            disabledCodes={learning}
-          />
-          <LanguagePicker
-            label="I want to learn"
-            hint="target language(s)"
-            selected={learning}
-            onChange={setLearning}
-            disabledCodes={native}
-          />
-        </div>
+        <LanguagePicker
+          label="I speak"
+          hint="your native language(s)"
+          selected={native}
+          onChange={setNative}
+        />
+        <LanguagePicker
+          label="I want to learn"
+          hint="target language(s)"
+          selected={learning}
+          onChange={setLearning}
+        />
 
         {error && <p className={styles.error}>{error}</p>}
         {message && <p className={styles.success}>{message}</p>}

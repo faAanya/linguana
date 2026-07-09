@@ -50,22 +50,18 @@ export default function Onboarding({ onComplete }: Props) {
           </p>
         </div>
 
-        <div className={styles.pickers}>
-          <LanguagePicker
-            label="I speak"
-            hint="your native language(s)"
-            selected={nativeLanguages}
-            onChange={setNativeLanguages}
-            disabledCodes={learningLanguages}
-          />
-          <LanguagePicker
-            label="I want to learn"
-            hint="target language(s)"
-            selected={learningLanguages}
-            onChange={setLearningLanguages}
-            disabledCodes={nativeLanguages}
-          />
-        </div>
+        <LanguagePicker
+          label="I speak"
+          hint="your native language(s)"
+          selected={nativeLanguages}
+          onChange={setNativeLanguages}
+        />
+        <LanguagePicker
+          label="I want to learn"
+          hint="target language(s)"
+          selected={learningLanguages}
+          onChange={setLearningLanguages}
+        />
 
         {error && <p className={styles.error}>{error}</p>}
 
