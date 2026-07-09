@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useAuth } from "@/components/Auth/AuthContext";
-import Onboarding from "@/components/Onboarding/Onboarding";
+import { useAuth } from "../Auth/AuthContext";
+import Onboarding from "../Onboarding/Onboarding";
 
 // Wrap the app. If a logged-in user hasn't set languages yet, force onboarding.
 export default function OnboardingGate({ children }: { children: React.ReactNode }) {

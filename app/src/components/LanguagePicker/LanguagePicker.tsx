@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { LANGUAGES } from "@/app/src/lib/languages";
+import { LANGUAGES } from "@/app/src/models/languages";
 import styles from "./LanguagePicker.module.css";
 
 interface Props {

@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@/components/Auth/AuthContext";
-import LanguagePicker from "@/components/LanguagePicker/LanguagePicker";
+import { useAuth } from "@/app/src/components/Auth/AuthContext";
+import LanguagePicker from "@/app/src/components/LanguagePicker/LanguagePicker";
 import styles from "./page.module.css";
 
 export default function ProfilePage() {

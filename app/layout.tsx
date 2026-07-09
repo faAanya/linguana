@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/components/Auth/AuthContext";
-import TopBar from "@/components/TopBar/TopBar";
-import OnboardingGate from "@/components/Onboarding/OnboardingGate";
+import { AuthProvider } from "@/app/src/components/Auth/AuthContext";
+import TopBar from "@/app/src/components/TopBar/TopBar";
+import OnboardingGate from "@/app/src/components/Onboarding/OnboardingGate";
 
 export const metadata: Metadata = {
   title: "Linguana — AI Vocabulary Flashcards",

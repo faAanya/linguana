@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import LanguagePicker from "@/components/LanguagePicker/LanguagePicker";
+import LanguagePicker from "../LanguagePicker/LanguagePicker";
 import styles from "./Onboarding.module.css";
 
 interface Props {
