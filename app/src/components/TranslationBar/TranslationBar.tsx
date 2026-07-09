@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useAuth } from "@/components/Auth/AuthContext";
-import { LANGUAGE_MAP } from "@/app/src/lib/languages";
+import { useAuth } from "../Auth/AuthContext";
+import { LANGUAGE_MAP } from "@/app/src/models/languages";
 import styles from "./TranslationBar.module.css";
 
 interface Row {
