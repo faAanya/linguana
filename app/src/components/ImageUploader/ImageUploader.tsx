@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import styles from "./ImageUploader.module.css";
+import TranslationBar from "../TranslationBar/TranslationBar";
 
 interface WordPair {
   word: string;
@@ -311,34 +312,36 @@ export default function ImageUploader({ onConfirmed }: Props) {
 
           <div className={styles.pairsEditList}>
             {rows.map((row) => (
-              <div key={row.key} className={styles.pairEditRow}>
-                <input
-                  className={styles.pairInput}
-                  type="text"
-                  value={row.word}
-                  placeholder="word"
-                  onChange={(e) => updateRow(row.key, "word", e.target.value)}
-                  autoFocus={rows.length === 1 && !row.word && !row.translation}
-                />
-                <span className={styles.pairSep}>→</span>
-                <input
-                  className={styles.pairInput}
-                  type="text"
-                  value={row.translation}
-                  placeholder="translation"
-                  onChange={(e) => updateRow(row.key, "translation", e.target.value)}
-                />
-                <button
-                  type="button"
-                  className={styles.deleteRowBtn}
-                  onClick={() => deleteRow(row.key)}
-                  aria-label={`Delete pair ${row.word || "(empty)"}`}
-                  title="Delete this pair"
-                  disabled={rows.length === 1}
-                >
-                  ×
-                </button>
-              </div>
+
+              <><TranslationBar
+                rows={rows}
+                sourceLang="en"
+                onTranslated={(updated) => setRows(updated)} /><div key={row.key} className={styles.pairEditRow}>
+                  <input
+                    className={styles.pairInput}
+                    type="text"
+                    value={row.word}
+                    placeholder="word"
+                    onChange={(e) => updateRow(row.key, "word", e.target.value)}
+                    autoFocus={rows.length === 1 && !row.word && !row.translation} />
+                  <span className={styles.pairSep}>→</span>
+                  <input
+                    className={styles.pairInput}
+                    type="text"
+                    value={row.translation}
+                    placeholder="translation"
+                    onChange={(e) => updateRow(row.key, "translation", e.target.value)} />
+                  <button
+                    type="button"
+                    className={styles.deleteRowBtn}
+                    onClick={() => deleteRow(row.key)}
+                    aria-label={`Delete pair ${row.word || "(empty)"}`}
+                    title="Delete this pair"
+                    disabled={rows.length === 1}
+                  >
+                    ×
+                  </button>
+                </div></>
             ))}
           </div>
 
