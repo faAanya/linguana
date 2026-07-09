@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import { AuthProvider } from "@/app/src/components/Auth/AuthContext";
-import TopBar from "@/app/src/components/TopBar/TopBar";
+import { AuthProvider } from "@/components/Auth/AuthContext";
+import TopBar from "@/components/TopBar/TopBar";
+import OnboardingGate from "@/components/Onboarding/OnboardingGate";
 
 export const metadata: Metadata = {
-  title: "LinguaFlash — Vocabulary Flashcards",
-  description: "Upload vocabulary notes and practice with AI-generated flashcards",
+  title: "Linguana — AI Vocabulary Flashcards",
+  description: "Learn languages faster with AI-generated flashcards",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
@@ -13,8 +14,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en">
       <body>
         <AuthProvider>
-          <TopBar />
-          {children}
+          <OnboardingGate>
+            <TopBar />
+            {children}
+          </OnboardingGate>
         </AuthProvider>
       </body>
     </html>

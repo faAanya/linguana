@@ -6,12 +6,11 @@ import { PublicUser } from "@/app/src/models/auth";
 interface AuthContextValue {
   user: PublicUser | null;
   loading: boolean;
-  // Step 1: request a code
   requestRegisterCode: (name: string, email: string) => Promise<void>;
   requestLoginCode: (email: string) => Promise<void>;
-  // Step 2: verify the code (creates session)
   verifyCode: (email: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
+  refresh: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -20,13 +19,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<PublicUser | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetch("/api/auth/me")
-      .then((r) => r.json())
-      .then((data) => setUser(data.user ?? null))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+  const refresh = useCallback(async () => {
+    try {
+      const res = await fetch("/api/auth/me");
+      const data = await res.json();
+      setUser(data.user ?? null);
+    } catch {
+      setUser(null);
+    }
   }, []);
+
+  useEffect(() => {
+    refresh().finally(() => setLoading(false));
+  }, [refresh]);
 
   const requestRegisterCode = useCallback(async (name: string, email: string) => {
     const res = await fetch("/api/auth/register", {
@@ -56,8 +61,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Verification failed");
+    // verify returns basic user; refresh to pull language arrays too
     setUser(data.user);
-  }, []);
+    await refresh();
+  }, [refresh]);
 
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
@@ -66,7 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, requestRegisterCode, requestLoginCode, verifyCode, logout }}
+      value={{ user, loading, requestRegisterCode, requestLoginCode, verifyCode, logout, refresh }}
     >
       {children}
     </AuthContext.Provider>

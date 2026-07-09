@@ -22,17 +22,18 @@ export interface VerificationCode {
   expiresAt: Date;
   createdAt: Date;
 }
- 
-// JWT payload shape — what gets encoded in the token
+
 export interface AuthTokenPayload {
   userId: string;
   email: string;
   name: string;
 }
-
-// Safe user shape returned to the client — never includes passwordHash
+ 
 export interface PublicUser {
   id: string;
   email: string;
   name: string;
+  learningLanguages?: string[];
+  nativeLanguages?: string[];
 }
+ 

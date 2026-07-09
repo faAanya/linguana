@@ -116,7 +116,7 @@
 .dropzone.dragOver {
   border-color: var(--green-500);
   color: var(--green-600);
-  transform: perspective(600px) rotateX(1deg) rotateY(-1deg) scale(1.01);
+  transform: rotateY(-1deg) scale(1.01);
 }
 
 .hiddenInput {

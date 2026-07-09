@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useAuth } from "@/app/src/components/Auth/AuthContext";
+import { useAuth } from "../Auth/AuthContext";
 import styles from "./ProfileButton.module.css";
 
 interface Props {
@@ -13,7 +13,6 @@ export default function ProfileButton({ onLoginClick }: Props) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
-  // Close dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (ref.current && !ref.current.contains(e.target as Node)) {
@@ -65,6 +64,14 @@ export default function ProfileButton({ onLoginClick }: Props) {
               <path d="M4 3V2.5A1.5 1.5 0 015.5 1h5A1.5 1.5 0 0112 2.5V3" stroke="currentColor" strokeWidth="1.5"/>
             </svg>
             My decks
+          </a>
+
+          <a href="/profile" className={styles.dropdownItem}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+              <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M2 14c0-3 2.5-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+            My profile
           </a>
 
           <div className={styles.dropdownDivider} />
