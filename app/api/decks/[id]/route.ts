@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
-import { getDb } from "@/app/src/data/mongodb";
-import { getSessionUser, refreshSession } from "@/app/src/data/jwt";
+import { getDb } from "@/app/src/lib/mongodb";
+import { getSessionUser, refreshSession } from "@/app/src/lib/jwt";
 
 async function requireUser() {
   let session = await getSessionUser();

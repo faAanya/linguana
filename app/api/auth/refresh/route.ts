@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { refreshSession, toPublicUser } from "@/app/src/data/jwt";
+import { refreshSession, toPublicUser } from "@/app/src/lib/jwt";
 
 export async function POST() {
   const payload = await refreshSession();

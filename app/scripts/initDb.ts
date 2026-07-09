@@ -39,15 +39,25 @@ async function main() {
   console.log(`Connected to database: ${dbName}\n`);
 
   // ── users ────────────────────────────────────────────────────
+  // Passwordless: no passwordHash. Email is verified via 6-digit code.
+  // learningLanguages / nativeLanguages are ISO code arrays (may be empty).
   await createCollectionSafe(db, "users", {
     validator: {
       $jsonSchema: {
         bsonType: "object",
-        required: ["email", "name", "passwordHash", "createdAt", "updatedAt"],
+        required: ["email", "name", "emailVerified", "learningLanguages", "nativeLanguages", "createdAt", "updatedAt"],
         properties: {
           email: { bsonType: "string" },
           name: { bsonType: "string" },
-          passwordHash: { bsonType: "string" },
+          emailVerified: { bsonType: "bool" },
+          learningLanguages: {
+            bsonType: "array",
+            items: { bsonType: "string" },
+          },
+          nativeLanguages: {
+            bsonType: "array",
+            items: { bsonType: "string" },
+          },
           createdAt: { bsonType: "date" },
           updatedAt: { bsonType: "date" },
         },
@@ -58,6 +68,35 @@ async function main() {
     { key: { email: 1 }, unique: true, name: "unique_email" },
   ]);
   console.log("✓ users");
+
+  // ── verificationCodes ────────────────────────────────────────
+  // Short-lived 6-digit email codes for register/login. The TTL index
+  // auto-deletes documents once expiresAt passes (expireAfterSeconds: 0
+  // means "delete as soon as the date in expiresAt is reached").
+  await createCollectionSafe(db, "verificationCodes", {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["email", "codeHash", "mode", "attempts", "expiresAt", "createdAt"],
+        properties: {
+          email: { bsonType: "string" },
+          codeHash: { bsonType: "string" },
+          name: { bsonType: ["string", "null"] },
+          mode: { enum: ["register", "login"] },
+          attempts: { bsonType: "int" },
+          expiresAt: { bsonType: "date" },
+          createdAt: { bsonType: "date" },
+        },
+      },
+    },
+  });
+  await db.collection("verificationCodes").createIndexes([
+    // One active code per email
+    { key: { email: 1 }, unique: true, name: "unique_email_code" },
+    // Auto-expire once expiresAt is reached
+    { key: { expiresAt: 1 }, expireAfterSeconds: 0, name: "ttl_expires" },
+  ]);
+  console.log("✓ verificationCodes");
 
   // ── words ────────────────────────────────────────────────────
   await createCollectionSafe(db, "words", {
@@ -181,6 +220,7 @@ async function main() {
   console.log("✓ userWords");
 
   // ── sourceTexts ──────────────────────────────────────────────
+  // Added "prompt" to the type enum for step 5 (prompt-based generation).
   await createCollectionSafe(db, "sourceTexts", {
     validator: {
       $jsonSchema: {
@@ -188,9 +228,10 @@ async function main() {
         required: ["userId", "type", "extractedPairs", "createdAt"],
         properties: {
           userId: { bsonType: "objectId" },
-          type: { enum: ["image", "text", "manual"] },
+          type: { enum: ["image", "text", "manual", "prompt"] },
           rawText: { bsonType: "string" },
           imageUrl: { bsonType: "string" },
+          promptText: { bsonType: "string" },
           extractedPairs: { bsonType: "array" },
           resultingUserDeckId: { bsonType: "objectId" },
           createdAt: { bsonType: "date" },

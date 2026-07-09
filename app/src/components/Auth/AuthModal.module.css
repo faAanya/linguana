@@ -182,3 +182,29 @@
 .switchBtn:hover {
   color: var(--green-600);
 }
+
+.codeInput {
+  width: 100%;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  background: var(--gray-50);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 700;
+  font-family: "JetBrains Mono", monospace;
+  letter-spacing: 0.4em;
+  text-align: center;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.codeInput:focus {
+  border-color: var(--green-500);
+}
+
+.codeInput::placeholder {
+  color: var(--gray-400);
+  letter-spacing: 0.4em;
+}

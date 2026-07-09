@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getSessionUser, refreshSession, toPublicUser } from "@/app/src/data/jwt";
+import { getSessionUser, refreshSession, toPublicUser } from "@/app/src/lib/jwt";
 
 export async function GET() {
   // Try access token first

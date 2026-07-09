@@ -1,48 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { getDb } from "@/app/src/data/mongodb";
-import { setAuthCookies, toPublicUser } from "@/app/src/data/jwt";
-import { AuthTokenPayload } from "@/app/src/models/auth";
+import { getDb } from "@/app/src/lib/mongodb";
+import { generateCode, storeCode } from "@/app/src/lib/verificationCode";
+import { sendVerificationCode } from "@/app/src/lib/email";
 
+// POST /api/auth/login — { email }
+// Sends a 6-digit code to an EXISTING user's email.
 export async function POST(request: NextRequest) {
   try {
-    const { email, password } = await request.json();
+    const { email } = await request.json();
 
-    if (!email?.trim() || !password) {
-      return NextResponse.json(
-        { error: "Email and password are required" },
-        { status: 400 }
-      );
+    if (!email?.trim()) {
+      return NextResponse.json({ error: "Email is required" }, { status: 400 });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
     const db = await getDb();
-    const user = await db
-      .collection("users")
-      .findOne({ email: email.toLowerCase().trim() });
 
-    // Use a constant-time comparison path — never reveal whether the
-    // email exists vs the password is wrong (prevents user enumeration).
-    const passwordHash = user?.passwordHash ?? "$2b$12$invalidhashfortimingattack";
-    const isValid = await bcrypt.compare(password, passwordHash);
+    const user = await db.collection("users").findOne({ email: normalizedEmail });
 
-    if (!user || !isValid) {
-      return NextResponse.json(
-        { error: "Invalid email or password" },
-        { status: 401 }
-      );
+    // Always respond the same way whether or not the account exists,
+    // to avoid revealing which emails are registered. Only send if it exists.
+    if (user) {
+      const code = generateCode();
+      await storeCode(normalizedEmail, code, { mode: "login" });
+      await sendVerificationCode(normalizedEmail, code);
     }
 
-    const payload: AuthTokenPayload = {
-      userId: user._id.toString(),
-      email: user.email,
-      name: user.name,
-    };
-
-    await setAuthCookies(payload);
-
-    return NextResponse.json({ user: toPublicUser(payload) });
+    return NextResponse.json({
+      ok: true,
+      message: "If that email is registered, a code has been sent",
+    });
   } catch (err) {
     console.error("Login error:", err);
-    return NextResponse.json({ error: "Login failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to send code" }, { status: 500 });
   }
 }

@@ -1,59 +1,40 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { getDb } from "@/app/src/data/mongodb";
-import { setAuthCookies, toPublicUser } from "@/app/src/data//jwt";
-import { AuthTokenPayload } from "@/app/src/models/auth";
+import { getDb } from "@/app/src/lib/mongodb";
+import { generateCode, storeCode } from "@/app/src/lib/verificationCode";
+import { sendVerificationCode } from "@/app/src/lib/email";
 
+// POST /api/auth/register — { name, email }
+// Sends a 6-digit code. User is NOT created yet; that happens on verify.
 export async function POST(request: NextRequest) {
   try {
-    const { name, email, password } = await request.json();
+    const { name, email } = await request.json();
 
-    if (!name?.trim() || !email?.trim() || !password) {
+    if (!name?.trim() || !email?.trim()) {
       return NextResponse.json(
-        { error: "Name, email and password are required" },
+        { error: "Name and email are required" },
         { status: 400 }
       );
     }
 
-    if (password.length < 8) {
-      return NextResponse.json(
-        { error: "Password must be at least 8 characters" },
-        { status: 400 }
-      );
-    }
-
+    const normalizedEmail = email.toLowerCase().trim();
     const db = await getDb();
-    const existing = await db.collection("users").findOne({ email: email.toLowerCase() });
 
+    // Block if an account already exists
+    const existing = await db.collection("users").findOne({ email: normalizedEmail });
     if (existing) {
       return NextResponse.json(
-        { error: "An account with this email already exists" },
+        { error: "An account with this email already exists. Try logging in." },
         { status: 409 }
       );
     }
 
-    const passwordHash = await bcrypt.hash(password, 12);
-    const now = new Date();
+    const code = generateCode();
+    await storeCode(normalizedEmail, code, { name: name.trim(), mode: "register" });
+    await sendVerificationCode(normalizedEmail, code);
 
-    const result = await db.collection("users").insertOne({
-      name: name.trim(),
-      email: email.toLowerCase().trim(),
-      passwordHash,
-      createdAt: now,
-      updatedAt: now,
-    });
-
-    const payload: AuthTokenPayload = {
-      userId: result.insertedId.toString(),
-      email: email.toLowerCase().trim(),
-      name: name.trim(),
-    };
-
-    await setAuthCookies(payload);
-
-    return NextResponse.json({ user: toPublicUser(payload) }, { status: 201 });
+    return NextResponse.json({ ok: true, message: "Verification code sent" });
   } catch (err) {
     console.error("Register error:", err);
-    return NextResponse.json({ error: "Registration failed" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to send code" }, { status: 500 });
   }
 }

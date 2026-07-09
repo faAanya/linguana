@@ -10,24 +10,43 @@ interface Props {
   onSuccess?: () => void;
 }
 
+type Stage = "details" | "code";
+
 export default function AuthModal({ onClose, initialMode = "login", onSuccess }: Props) {
-  const { login, register } = useAuth();
+  const { requestRegisterCode, requestLoginCode, verifyCode } = useAuth();
   const [mode, setMode] = useState<"login" | "register">(initialMode);
+  const [stage, setStage] = useState<Stage>("details");
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async () => {
+  // Stage 1: send the code
+  const handleSendCode = async () => {
     setError(null);
     setLoading(true);
     try {
       if (mode === "register") {
-        await register(name, email, password);
+        await requestRegisterCode(name, email);
       } else {
-        await login(email, password);
+        await requestLoginCode(email);
       }
+      setStage("code");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Stage 2: verify the code
+  const handleVerify = async () => {
+    setError(null);
+    setLoading(true);
+    try {
+      await verifyCode(email, code);
       onSuccess ? onSuccess() : onClose();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -38,7 +57,15 @@ export default function AuthModal({ onClose, initialMode = "login", onSuccess }:
 
   const switchMode = () => {
     setMode((m) => (m === "login" ? "register" : "login"));
+    setStage("details");
     setError(null);
+    setCode("");
+  };
+
+  const backToDetails = () => {
+    setStage("details");
+    setError(null);
+    setCode("");
   };
 
   return (
@@ -46,80 +73,115 @@ export default function AuthModal({ onClose, initialMode = "login", onSuccess }:
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <button className={styles.closeBtn} onClick={onClose} aria-label="Close">×</button>
 
-        <h2 className={styles.title}>
-          {mode === "login" ? "Welcome back" : "Create account"}
-        </h2>
-        <p className={styles.subtitle}>
-          {mode === "login"
-            ? "Log in to save and access your decks"
-            : "Sign up to start building your vocabulary"}
-        </p>
+        {stage === "details" ? (
+          <>
+            <h2 className={styles.title}>
+              {mode === "login" ? "Welcome back" : "Create account"}
+            </h2>
+            <p className={styles.subtitle}>
+              {mode === "login"
+                ? "Enter your email and we'll send you a login code"
+                : "Enter your details and we'll send you a verification code"}
+            </p>
 
-        <div className={styles.fields}>
-          {mode === "register" && (
-            <div className={styles.field}>
-              <label className={styles.label}>Name</label>
-              <input
-                className={styles.input}
-                type="text"
-                placeholder="Your name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                autoFocus
-              />
+            <div className={styles.fields}>
+              {mode === "register" && (
+                <div className={styles.field}>
+                  <label className={styles.label}>Name</label>
+                  <input
+                    className={styles.input}
+                    type="text"
+                    placeholder="Your name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              <div className={styles.field}>
+                <label className={styles.label}>Email</label>
+                <input
+                  className={styles.input}
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleSendCode()}
+                  autoFocus={mode === "login"}
+                />
+              </div>
             </div>
-          )}
 
-          <div className={styles.field}>
-            <label className={styles.label}>Email</label>
-            <input
-              className={styles.input}
-              type="email"
-              placeholder="you@example.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              autoFocus={mode === "login"}
-            />
-          </div>
+            {error && <p className={styles.error}>{error}</p>}
 
-          <div className={styles.field}>
-            <label className={styles.label}>Password</label>
-            <input
-              className={styles.input}
-              type="password"
-              placeholder={mode === "register" ? "At least 8 characters" : "Your password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-            />
-          </div>
-        </div>
+            <button className={styles.btnSubmit} onClick={handleSendCode} disabled={loading}>
+              {loading ? (
+                <span className={styles.spinner}>
+                  <span className={styles.spinnerDot} />
+                  Sending code…
+                </span>
+              ) : (
+                "Send code"
+              )}
+            </button>
 
-        {error && <p className={styles.error}>{error}</p>}
+            <p className={styles.switchText}>
+              {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
+              <button className={styles.switchBtn} onClick={switchMode}>
+                {mode === "login" ? "Sign up" : "Log in"}
+              </button>
+            </p>
+          </>
+        ) : (
+          <>
+            <h2 className={styles.title}>Enter your code</h2>
+            <p className={styles.subtitle}>
+              We sent a 6-digit code to <strong>{email}</strong>
+            </p>
 
-        <button
-          className={styles.btnSubmit}
-          onClick={handleSubmit}
-          disabled={loading}
-        >
-          {loading ? (
-            <span className={styles.spinner}>
-              <span className={styles.spinnerDot} />
-              {mode === "login" ? "Logging in…" : "Creating account…"}
-            </span>
-          ) : mode === "login" ? (
-            "Log in"
-          ) : (
-            "Create account"
-          )}
-        </button>
+            <div className={styles.fields}>
+              <div className={styles.field}>
+                <label className={styles.label}>Verification code</label>
+                <input
+                  className={styles.codeInput}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={6}
+                  placeholder="000000"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  onKeyDown={(e) => e.key === "Enter" && handleVerify()}
+                  autoFocus
+                />
+              </div>
+            </div>
 
-        <p className={styles.switchText}>
-          {mode === "login" ? "Don't have an account?" : "Already have an account?"}{" "}
-          <button className={styles.switchBtn} onClick={switchMode}>
-            {mode === "login" ? "Sign up" : "Log in"}
-          </button>
-        </p>
+            {error && <p className={styles.error}>{error}</p>}
+
+            <button
+              className={styles.btnSubmit}
+              onClick={handleVerify}
+              disabled={loading || code.length !== 6}
+            >
+              {loading ? (
+                <span className={styles.spinner}>
+                  <span className={styles.spinnerDot} />
+                  Verifying…
+                </span>
+              ) : (
+                "Verify & continue"
+              )}
+            </button>
+
+            <p className={styles.switchText}>
+              Didn't get it?{" "}
+              <button className={styles.switchBtn} onClick={backToDetails}>
+                Try again
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   );
