@@ -9,9 +9,8 @@ async function requireUser() {
 }
 
 // POST /api/translate
-// Body: { items: [{ text }], sourceLang, targetLang }
+// Body: { items: [{ text }] | string[], sourceLang, targetLang }
 // Returns: { translations: [{ text, translation }] }
-// Handles both single and batch (array of items) in one call.
 export async function POST(request: NextRequest) {
   try {
     const session = await requireUser();
@@ -31,8 +30,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Translate sequentially to stay within HF free-tier rate limits.
-    // (Batch parallelism can trip rate limiting on the free Inference API.)
     const translations: { text: string; translation: string }[] = [];
     for (const item of items) {
       const text = typeof item === "string" ? item : item.text;

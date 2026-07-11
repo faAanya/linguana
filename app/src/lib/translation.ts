@@ -1,57 +1,14 @@
-// Translation via HuggingFace Inference API using facebook/nllb-200-distilled-600M.
-// NLLB uses its own language codes (FLORES-200), not ISO 639-1, so we map
-// our app's ISO codes to NLLB codes.
+// Translation via OpenRouter (OpenAI-compatible API).
+// OpenRouter gives access to many models through one endpoint. We use a
+// free/cheap instruct model and prompt it to translate a single word/phrase.
 
-const HF_API_URL =
-  "https://api-inference.huggingface.co/models/facebook/nllb-200-distilled-600M";
+import { LANGUAGE_MAP } from "../models/languages";
 
-// Maps our ISO 639-1 codes to NLLB FLORES-200 codes.
-const NLLB_CODES: Record<string, string> = {
-  en: "eng_Latn",
-  es: "spa_Latn",
-  fr: "fra_Latn",
-  de: "deu_Latn",
-  it: "ita_Latn",
-  pt: "por_Latn",
-  ru: "rus_Cyrl",
-  uk: "ukr_Cyrl",
-  pl: "pol_Latn",
-  nl: "nld_Latn",
-  sv: "swe_Latn",
-  no: "nob_Latn",
-  da: "dan_Latn",
-  fi: "fin_Latn",
-  cs: "ces_Latn",
-  el: "ell_Grek",
-  tr: "tur_Latn",
-  ar: "arb_Arab",
-  he: "heb_Hebr",
-  hi: "hin_Deva",
-  bn: "ben_Beng",
-  ur: "urd_Arab",
-  fa: "pes_Arab",
-  zh: "zho_Hans",
-  ja: "jpn_Jpan",
-  ko: "kor_Hang",
-  vi: "vie_Latn",
-  th: "tha_Thai",
-  id: "ind_Latn",
-  ms: "zsm_Latn",
-  tl: "tgl_Latn",
-  ro: "ron_Latn",
-  hu: "hun_Latn",
-  bg: "bul_Cyrl",
-  sr: "srp_Cyrl",
-  hr: "hrv_Latn",
-  sk: "slk_Latn",
-  lt: "lit_Latn",
-  lv: "lav_Latn",
-  et: "est_Latn",
-};
+const OPENROUTER_URL = "https://openrouter.ai/api/v1/chat/completions";
 
-export function toNllbCode(isoCode: string): string | undefined {
-  return NLLB_CODES[isoCode];
-}
+// A capable, low-cost model. Swap for any model id from openrouter.ai/models.
+// ":free" variants cost nothing but are rate-limited.
+const TRANSLATION_MODEL = "meta-llama/llama-3.3-70b-instruct";
 
 export interface TranslateParams {
   text: string;
@@ -59,53 +16,63 @@ export interface TranslateParams {
   targetLang: string; // ISO 639-1
 }
 
+function langName(code: string): string {
+  return LANGUAGE_MAP[code]?.name ?? code;
+}
+
 export async function translate({
   text,
   sourceLang,
   targetLang,
 }: TranslateParams): Promise<string> {
-  const token = process.env.HUGGINGFACE_API_TOKEN;
-  if (!token) {
-    throw new Error("HUGGINGFACE_API_TOKEN is not set");
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  if (!apiKey) {
+    throw new Error("OPENROUTER_API_KEY is not set");
   }
 
-  const srcCode = toNllbCode(sourceLang);
-  const tgtCode = toNllbCode(targetLang);
+  const source = langName(sourceLang);
+  const target = langName(targetLang);
 
-  if (!srcCode || !tgtCode) {
-    throw new Error(`Unsupported language pair: ${sourceLang} → ${targetLang}`);
-  }
+  // Tight prompt: we want ONLY the translation back, nothing else.
+  const systemPrompt =
+    "You are a precise translation engine. You translate a single word or short " +
+    "phrase and reply with ONLY the translation — no quotes, no explanation, no " +
+    "punctuation unless part of the translation. If multiple common translations " +
+    "exist, give the single most common one.";
 
-  const response = await fetch(HF_API_URL, {
+  const userPrompt = `Translate this from ${source} to ${target}:\n\n${text}`;
+
+  const response = await fetch(OPENROUTER_URL, {
     method: "POST",
     headers: {
-      Authorization: `Bearer ${token}`,
+      Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
+      // Optional but recommended by OpenRouter for analytics / ranking
+      "HTTP-Referer": process.env.APP_URL ?? "https://linguana.app",
+      "X-Title": "Linguana",
     },
     body: JSON.stringify({
-      inputs: text,
-      parameters: {
-        src_lang: srcCode,
-        tgt_lang: tgtCode,
-      },
+      model: TRANSLATION_MODEL,
+      messages: [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: userPrompt },
+      ],
+      temperature: 0.2,
+      max_tokens: 100,
     }),
   });
 
   if (!response.ok) {
-    // HF returns 503 while a model is loading — surface a clear message
-    if (response.status === 503) {
-      throw new Error("Translation model is loading, please try again in a moment");
-    }
     const errText = await response.text();
-    throw new Error(`Translation failed: ${errText}`);
+    throw new Error(`Translation failed (${response.status}): ${errText}`);
   }
 
   const data = await response.json();
+  const translation = data.choices?.[0]?.message?.content?.trim();
 
-  // NLLB returns [{ translation_text: "..." }]
-  if (Array.isArray(data) && data[0]?.translation_text) {
-    return data[0].translation_text;
+  if (!translation) {
+    throw new Error("Empty translation response");
   }
 
-  throw new Error("Unexpected translation response format");
+  return translation;
 }

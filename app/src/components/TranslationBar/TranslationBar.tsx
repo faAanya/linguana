@@ -13,27 +13,29 @@ interface Row {
 
 interface Props {
   rows: Row[];
-  // Source language of the words (what the user typed). Default "en".
   sourceLang?: string;
-  // Called with the full updated rows array after translation
+  targetLang: string;
+  onTargetLangChange: (code: string) => void;
   onTranslated: (updated: Row[]) => void;
 }
 
-// A bar that sits above the editable pairs list. Lets the user pick a
-// target language and translate ALL rows at once via HuggingFace.
-export default function TranslationBar({ rows, sourceLang = "en", onTranslated }: Props) {
+export default function TranslationBar({
+  rows, sourceLang = "en", targetLang, onTargetLangChange, onTranslated,
+}: Props) {
   const { user } = useAuth();
-  const [targetLang, setTargetLang] = useState<string>(
-    user?.learningLanguages?.[0] ?? "es"
-  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Offer the user's learning languages first, fall back to all
-  const options = (user?.learningLanguages?.length
-    ? user.learningLanguages
-    : Object.keys(LANGUAGE_MAP)
-  ).map((code) => LANGUAGE_MAP[code]).filter(Boolean);
+const codes = [
+  ...(user?.nativeLanguages ?? []),
+  ...(user?.learningLanguages ?? []),
+];
+const uniqueCodes = [...new Set(codes)];
+const options = (uniqueCodes.length
+  ? uniqueCodes
+  : Object.keys(LANGUAGE_MAP)
+).map((code) => LANGUAGE_MAP[code]).filter(Boolean);
 
   const handleTranslateAll = async () => {
     const toTranslate = rows.filter((r) => r.word.trim());
@@ -86,7 +88,7 @@ export default function TranslationBar({ rows, sourceLang = "en", onTranslated }
         <select
           className={styles.select}
           value={targetLang}
-          onChange={(e) => setTargetLang(e.target.value)}
+          onChange={(e) => onTargetLangChange(e.target.value)}
         >
           {options.map((lang) => (
             <option key={lang.code} value={lang.code}>

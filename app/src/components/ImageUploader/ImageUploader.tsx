@@ -1,8 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import styles from "./ImageUploader.module.css";
 import TranslationBar from "../TranslationBar/TranslationBar";
+import RowTranslateButton from "../TranslationBar/RowTranslateButton";
+import { useAuth } from "@/app/src/components/Auth/AuthContext";
+import PromptGenerator from "../PromptGenerator/PromptGenerator";
 
 interface WordPair {
   word: string;
@@ -29,7 +32,7 @@ const nextRowKey = () => `row-${++rowKeyCounter}-${Date.now()}`;
 
 export default function ImageUploader({ onConfirmed }: Props) {
   const [mode, setMode] = useState<InputMode>("image");
-
+  const { user } = useAuth();
   // Image mode state
   const [dragOver, setDragOver] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -44,6 +47,13 @@ export default function ImageUploader({ onConfirmed }: Props) {
   const [error, setError] = useState<string | null>(null);
   const [editedRaw, setEditedRaw] = useState<string>("");
   const [rows, setRows] = useState<EditableRow[]>([]);
+  const [targetLang, setTargetLang] = useState<string>("");
+
+  useEffect(() => {
+    if (!targetLang && user) {
+      setTargetLang(user.nativeLanguages?.[0] ?? user.learningLanguages?.[0] ?? "en");
+    }
+  }, [user, targetLang]);
 
   const handleFile = useCallback((f: File) => {
     if (!f.type.startsWith("image/")) {
@@ -172,6 +182,15 @@ export default function ImageUploader({ onConfirmed }: Props) {
     setRows(mode === "manual" ? [{ key: nextRowKey(), word: "", translation: "" }] : []);
   };
 
+  const handleGenerated = (pairs: { word: string; translation: string }[]) => {
+    const newRows = pairs.map((p) => ({ ...p, key: nextRowKey() }));
+    setRows((prev) => {
+      // If the only row is empty, replace it; otherwise append
+      const meaningful = prev.filter((r) => r.word.trim() || r.translation.trim());
+      return [...meaningful, ...newRows];
+    });
+  };
+
   // Shared editable pairs list — used by manual mode and result review.
   // TranslationBar sits ONCE above the list, then the rows map below it.
   const renderPairsEditor = () => (
@@ -179,6 +198,8 @@ export default function ImageUploader({ onConfirmed }: Props) {
       <TranslationBar
         rows={rows}
         sourceLang="en"
+        targetLang={targetLang}
+        onTargetLangChange={setTargetLang}
         onTranslated={(updated) => setRows(updated as EditableRow[])}
       />
 
@@ -200,6 +221,13 @@ export default function ImageUploader({ onConfirmed }: Props) {
               value={row.translation}
               placeholder="translation"
               onChange={(e) => updateRow(row.key, "translation", e.target.value)}
+            />
+            <RowTranslateButton
+              word={row.word}
+              sourceLang="en"
+              targetLang={targetLang}
+              onTranslated={(t) => updateRow(row.key, "translation", t)}
+              disabled={!targetLang}
             />
             <button
               type="button"
@@ -233,8 +261,8 @@ export default function ImageUploader({ onConfirmed }: Props) {
                 mode === "text"
                   ? "translateX(100%)"
                   : mode === "manual"
-                  ? "translateX(200%)"
-                  : "translateX(0%)",
+                    ? "translateX(200%)"
+                    : "translateX(0%)",
             }}
           />
           <button
@@ -358,6 +386,8 @@ export default function ImageUploader({ onConfirmed }: Props) {
               <span className={styles.pairsCount}>{validRows.length} ready</span>
             </p>
           </div>
+
+          <PromptGenerator onGenerated={handleGenerated} />
 
           {renderPairsEditor()}
 
