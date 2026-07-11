@@ -7,47 +7,89 @@ function getOpenAI() {
   });
 }
 
-const IMAGE_PROMPT = `Please read this image carefully. It contains vocabulary entries in the format "word - translation" (one per line).
+const IMAGE_PROMPT = `Read the image and extract vocabulary cards from any readable text.
 
-Extract all word pairs exactly as written, preserving the original spelling and punctuation.
+The image may contain:
+- a list of words;
+- words with translations;
+- words with definitions;
+- notes, tables, screenshots, textbook pages, handwritten text, etc.
 
-Return ONLY a JSON object in this exact format, with no extra text or markdown:
+Create one flashcard for every vocabulary word you can confidently identify.
+
+Rules:
+- If a translation, definition, or equivalent meaning is explicitly present, put it into "translation".
+- If only a standalone word is present, create a card with an empty translation ("").
+- Do NOT invent or guess translations.
+- Preserve the original spelling, capitalization, punctuation, and accents.
+- Ignore sentences that do not represent vocabulary items unless they clearly introduce a vocabulary word.
+- If the same word appears multiple times, include it only once.
+
+Return ONLY valid JSON in this exact format:
+
 {
   "pairs": [
-    { "word": "...", "translation": "..." },
-    ...
+    {
+      "word": "...",
+      "translation": "..."
+    }
   ],
-  "rawText": "the full text you read from the image, line by line"
+  "rawText": "all text extracted from the image"
 }
 
-If you cannot read the image or find no word pairs, return:
-{ "pairs": [], "rawText": "" }`;
+If no vocabulary words can be identified, return:
+
+{
+  "pairs": [],
+  "rawText": ""
+}`;
 
 // Text mode prompt is different: the user may paste free-form text rather than
 // a clean "word - translation" list, so the model needs to actively find or
 // infer vocabulary pairs (e.g. a word and its translation/definition mentioned
 // anywhere in the passage), not just parse a fixed line format.
-const TEXT_PROMPT = `The user pasted the text below. It may already be in "word - translation" format,
-or it may be free-form text (sentences, a paragraph, a mixed list) that contains
-vocabulary words alongside their translations or meanings somewhere in the text.
+const TEXT_PROMPT = `The user pasted text.
 
-Find or infer all word/translation pairs you can identify in this text.
-- If the text is already line-based "word - translation", extract them directly.
-- If it's free-form, identify candidate vocabulary words and pair each with its
-  most likely translation or meaning as given in the text.
-- Preserve original spelling.
+The text may be:
+- a single word;
+- a list of words;
+- words with translations;
+- words with definitions;
+- sentences;
+- paragraphs;
+- notes;
+- copied textbook content;
+- any mixture of the above.
 
-Return ONLY a JSON object in this exact format, with no extra text or markdown:
+Extract vocabulary flashcards.
+
+Rules:
+- Every identifiable vocabulary word should become one flashcard.
+- If the text explicitly contains a translation, definition, synonym, or equivalent meaning for that word, place it into "translation".
+- If only the word is present, leave "translation" as an empty string ("").
+- Do NOT invent or guess translations.
+- Preserve the original spelling and capitalization.
+- Ignore ordinary sentences unless they clearly contain vocabulary entries.
+- Remove duplicate words.
+
+Return ONLY valid JSON in this exact format:
+
 {
   "pairs": [
-    { "word": "...", "translation": "..." },
-    ...
+    {
+      "word": "...",
+      "translation": "..."
+    }
   ],
-  "rawText": "the original text, unchanged"
+  "rawText": "the original text exactly as provided"
 }
 
-If you find no usable word pairs, return:
-{ "pairs": [], "rawText": "<the original text>" }
+If no vocabulary words are found, return:
+
+{
+  "pairs": [],
+  "rawText": "{{INPUT_TEXT}}"
+}
 
 TEXT:
 """
