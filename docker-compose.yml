@@ -15,6 +15,7 @@ services:
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - GMAIL_USER=${GMAIL_USER}
       - GMAIL_APP_PASSWORD=${GMAIL_APP_PASSWORD}
+      - HUGGINGFACE_API_TOKEN=${HUGGINGFACE_API_TOKEN}
     develop:
       watch:
         - action: sync

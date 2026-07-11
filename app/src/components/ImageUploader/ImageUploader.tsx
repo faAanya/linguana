@@ -172,6 +172,55 @@ export default function ImageUploader({ onConfirmed }: Props) {
     setRows(mode === "manual" ? [{ key: nextRowKey(), word: "", translation: "" }] : []);
   };
 
+  // Shared editable pairs list — used by manual mode and result review.
+  // TranslationBar sits ONCE above the list, then the rows map below it.
+  const renderPairsEditor = () => (
+    <>
+      <TranslationBar
+        rows={rows}
+        sourceLang="en"
+        onTranslated={(updated) => setRows(updated as EditableRow[])}
+      />
+
+      <div className={styles.pairsEditList}>
+        {rows.map((row) => (
+          <div key={row.key} className={styles.pairEditRow}>
+            <input
+              className={styles.pairInput}
+              type="text"
+              value={row.word}
+              placeholder="word"
+              onChange={(e) => updateRow(row.key, "word", e.target.value)}
+              autoFocus={rows.length === 1 && !row.word && !row.translation}
+            />
+            <span className={styles.pairSep}>→</span>
+            <input
+              className={styles.pairInput}
+              type="text"
+              value={row.translation}
+              placeholder="translation"
+              onChange={(e) => updateRow(row.key, "translation", e.target.value)}
+            />
+            <button
+              type="button"
+              className={styles.deleteRowBtn}
+              onClick={() => deleteRow(row.key)}
+              aria-label={`Delete pair ${row.word || "(empty)"}`}
+              title="Delete this pair"
+              disabled={rows.length === 1}
+            >
+              ×
+            </button>
+          </div>
+        ))}
+      </div>
+
+      <button type="button" className={styles.addRowBtn} onClick={addRow}>
+        + Add pair
+      </button>
+    </>
+  );
+
   return (
     <div className={styles.wrapper}>
       {/* Mode switcher — iOS-style segmented slider */}
@@ -310,44 +359,7 @@ export default function ImageUploader({ onConfirmed }: Props) {
             </p>
           </div>
 
-          <div className={styles.pairsEditList}>
-            {rows.map((row) => (
-
-              <><TranslationBar
-                rows={rows}
-                sourceLang="en"
-                onTranslated={(updated) => setRows(updated)} /><div key={row.key} className={styles.pairEditRow}>
-                  <input
-                    className={styles.pairInput}
-                    type="text"
-                    value={row.word}
-                    placeholder="word"
-                    onChange={(e) => updateRow(row.key, "word", e.target.value)}
-                    autoFocus={rows.length === 1 && !row.word && !row.translation} />
-                  <span className={styles.pairSep}>→</span>
-                  <input
-                    className={styles.pairInput}
-                    type="text"
-                    value={row.translation}
-                    placeholder="translation"
-                    onChange={(e) => updateRow(row.key, "translation", e.target.value)} />
-                  <button
-                    type="button"
-                    className={styles.deleteRowBtn}
-                    onClick={() => deleteRow(row.key)}
-                    aria-label={`Delete pair ${row.word || "(empty)"}`}
-                    title="Delete this pair"
-                    disabled={rows.length === 1}
-                  >
-                    ×
-                  </button>
-                </div></>
-            ))}
-          </div>
-
-          <button type="button" className={styles.addRowBtn} onClick={addRow}>
-            + Add pair
-          </button>
+          {renderPairsEditor()}
 
           <div className={styles.resultActions}>
             <button className={styles.btnSecondary} onClick={handleReset}>Clear all</button>
@@ -361,7 +373,7 @@ export default function ImageUploader({ onConfirmed }: Props) {
       {/* Error */}
       {error && <div className={styles.errorBox}><strong>Error:</strong> {error}</div>}
 
-      {/* Result review — shared by both modes */}
+      {/* Result review — image & text modes */}
       {result && (
         <div className={styles.resultSection}>
           <div className={styles.resultColumns}>
@@ -390,40 +402,7 @@ export default function ImageUploader({ onConfirmed }: Props) {
                 <span className={styles.pairsCount}>{validRows.length} ready</span>
               </p>
 
-              <div className={styles.pairsEditList}>
-                {rows.map((row) => (
-                  <div key={row.key} className={styles.pairEditRow}>
-                    <input
-                      className={styles.pairInput}
-                      type="text"
-                      value={row.word}
-                      placeholder="word"
-                      onChange={(e) => updateRow(row.key, "word", e.target.value)}
-                    />
-                    <span className={styles.pairSep}>→</span>
-                    <input
-                      className={styles.pairInput}
-                      type="text"
-                      value={row.translation}
-                      placeholder="translation"
-                      onChange={(e) => updateRow(row.key, "translation", e.target.value)}
-                    />
-                    <button
-                      type="button"
-                      className={styles.deleteRowBtn}
-                      onClick={() => deleteRow(row.key)}
-                      aria-label={`Delete pair ${row.word || "(empty)"}`}
-                      title="Delete this pair"
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <button type="button" className={styles.addRowBtn} onClick={addRow}>
-                + Add pair
-              </button>
+              {renderPairsEditor()}
             </div>
           </div>
           <div className={styles.resultActions}>
