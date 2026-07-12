@@ -8,9 +8,11 @@ interface Props {
   cards: PracticeCard[];
   onSaved: (deck: PracticeDeck) => void;
   onBack: () => void;
+  sourceLang?: string;
+  targetLang?: string;
 }
 
-export default function SaveDeck({ cards, onSaved, onBack }: Props) {
+export default function SaveDeck({ cards, onSaved, onBack, sourceLang, targetLang }: Props) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -24,7 +26,7 @@ export default function SaveDeck({ cards, onSaved, onBack }: Props) {
       const res = await fetch("/api/decks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, cards }),
+        body: JSON.stringify({ name, cards, sourceLang, targetLang }),
       });
 
       if (!res.ok) {

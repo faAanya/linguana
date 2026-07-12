@@ -64,6 +64,23 @@ export interface UserWord {
   updatedAt: Date;
 }
 
+// ── SavedWord (personal vocabulary collection) ────────────────
+// A word the user saved from the "Add words" (Google-Translate-style)
+// screen. Denormalized (word + translation stored inline) so the
+// "My words" list renders without a join. Still linked to the global
+// Word via wordId so translations feed the shared dictionary.
+export interface SavedWord {
+  _id?: ObjectId;
+  userId: ObjectId;
+  wordId: ObjectId;                       // reference to global Word
+  word: string;                           // source text, e.g. "hello"
+  translation: string;                    // chosen translation, e.g. "hola"
+  sourceLanguage: string;                 // ISO 639-1 of `word`
+  targetLanguage: string;                 // ISO 639-1 of `translation`
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // ── SourceText (uploaded text/image for AI extraction) ────────
 export type SourceTextType = "image" | "text" | "manual";
 

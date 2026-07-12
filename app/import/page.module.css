@@ -1,0 +1,140 @@
+.main {
+  min-height: 100vh;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5rem 1.25rem 4rem;
+  gap: 2.5rem;
+}
+
+.loadingSpinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-top: 30vh;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.header {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.625rem;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.875rem;
+  border-radius: 99px;
+  background: var(--green-100);
+  border: 1px solid var(--green-500);
+  color: var(--green-700);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.title {
+  font-size: clamp(2rem, 5vw, 3rem);
+  font-weight: 800;
+  margin: 0;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #22c55e, #14b8a6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.subtitle {
+  font-size: 1rem;
+  color: var(--text-muted);
+  max-width: 480px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* ── Success state ───────────────────────────────────────── */
+.successCard {
+  width: 100%;
+  max-width: 600px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 16px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+}
+
+.successText {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--green-600);
+  margin: 0;
+}
+
+.pairsList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.pairRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  background: var(--gray-100);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+}
+
+.word {
+  color: var(--indigo-600);
+  font-weight: 600;
+  flex: 1;
+}
+
+.arrow {
+  color: var(--gray-400);
+}
+
+.translation {
+  color: var(--green-600);
+  flex: 1;
+}
+
+.resetBtn {
+  align-self: flex-start;
+  padding: 0.625rem 1.25rem;
+  border-radius: 8px;
+  background: transparent;
+  border: 1px solid var(--gray-200);
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.resetBtn:hover {
+  border-color: var(--green-500);
+  color: var(--green-600);
+}

@@ -14,6 +14,13 @@
   z-index: 40;
 }
 
+.left {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  min-width: 0;
+}
+
 .logo {
   font-size: 1rem;
   font-weight: 800;
@@ -24,4 +31,121 @@
   background-clip: text;
   text-decoration: none;
   cursor: pointer;
+  flex-shrink: 0;
+}
+
+/* ── Desktop tabs ── */
+.tabs {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.tab {
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.tab:hover {
+  background: var(--gray-100);
+  color: var(--text-primary);
+}
+
+.tabActive {
+  background: var(--green-100);
+  color: var(--green-700);
+}
+
+/* ── Burger (hidden on desktop) ── */
+.burger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  width: 32px;
+  height: 32px;
+  padding: 6px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-radius: 8px;
+}
+
+.burger:hover {
+  background: var(--gray-100);
+}
+
+.burgerBar {
+  display: block;
+  width: 100%;
+  height: 2px;
+  border-radius: 2px;
+  background: var(--text-secondary);
+}
+
+/* ── Mobile drawer ── */
+.backdrop {
+  position: fixed;
+  inset: 56px 0 0 0;
+  background: rgba(17, 24, 39, 0.25);
+  z-index: 39;
+}
+
+.drawer {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.12);
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem;
+  gap: 0.125rem;
+  z-index: 40;
+}
+
+.drawerItem {
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-decoration: none;
+}
+
+.drawerItem:hover {
+  background: var(--gray-100);
+}
+
+.drawerItemActive {
+  background: var(--green-100);
+  color: var(--green-700);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .bar {
+    padding: 0 1rem;
+  }
+  .tabs {
+    display: none;
+  }
+  .burger {
+    display: flex;
+  }
+}
+
+@media (min-width: 641px) {
+  .drawer,
+  .backdrop {
+    display: none;
+  }
 }

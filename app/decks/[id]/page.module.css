@@ -1,0 +1,264 @@
+.main {
+  min-height: 100vh;
+  background: var(--bg-page);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 5rem 1.25rem 4rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 680px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 18px;
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.06);
+}
+
+.headerRow {
+  display: flex;
+}
+
+.backLink {
+  border: none;
+  background: transparent;
+  color: var(--teal-500);
+  font-size: 0.875rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  padding: 0;
+}
+
+.backLink:hover {
+  color: var(--green-600);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.nameInput {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border-radius: 10px;
+  background: var(--gray-50);
+  border: 1px solid var(--border-card);
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.15s;
+  box-sizing: border-box;
+}
+
+.nameInput:focus {
+  border-color: var(--green-500);
+}
+
+.cardsLabel {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.count {
+  font-size: 0.8rem;
+  color: var(--green-600);
+  font-weight: 600;
+}
+
+.cardsList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  max-height: 420px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
+}
+
+.cardRow {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem;
+  border-radius: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--gray-200);
+  transition: border-color 0.15s;
+}
+
+.cardRow:hover {
+  border-color: var(--gray-400);
+}
+
+.cardInput {
+  flex: 1;
+  min-width: 0;
+  padding: 0.5rem 0.625rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text-primary);
+  font-family: "JetBrains Mono", monospace;
+  font-size: 0.875rem;
+  outline: none;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.cardInput:first-of-type {
+  color: var(--indigo-600);
+  font-weight: 600;
+}
+
+.cardInput:last-of-type {
+  color: var(--green-600);
+}
+
+.cardInput:focus {
+  border-color: var(--green-500);
+  background: var(--gray-50);
+}
+
+.cardInput::placeholder {
+  color: var(--gray-400);
+  font-weight: 400;
+}
+
+.sep {
+  color: var(--gray-400);
+  flex-shrink: 0;
+}
+
+.deleteRowBtn {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--gray-400);
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.deleteRowBtn:hover {
+  background: var(--red-100);
+  color: var(--red-500);
+}
+
+.addBtn {
+  align-self: flex-start;
+  margin-top: 0.5rem;
+  padding: 0.5rem 0.875rem;
+  border-radius: 8px;
+  border: 1px dashed var(--gray-200);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+
+.addBtn:hover {
+  border-color: var(--green-500);
+  color: var(--green-600);
+}
+
+.error {
+  color: #b91c1c;
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  background: var(--red-100);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+.success {
+  color: var(--green-700);
+  font-size: 0.875rem;
+  margin: 0;
+  padding: 0.625rem 0.875rem;
+  background: var(--green-100);
+  border: 1px solid var(--green-500);
+  border-radius: 8px;
+}
+
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.btnCancel,
+.btnSave {
+  padding: 0.7rem 1.5rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.btnCancel {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--gray-200);
+}
+
+.btnCancel:hover {
+  border-color: var(--indigo-600);
+  color: var(--indigo-600);
+}
+
+.btnSave {
+  background: var(--green-500);
+  color: #fff;
+}
+
+.btnSave:hover:not(:disabled) {
+  background: var(--green-600);
+  transform: translateY(-1px);
+}
+
+.btnSave:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  margin-top: 30vh;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}

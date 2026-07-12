@@ -1,0 +1,321 @@
+/* ── Centered wrapper for setup / loading / error / practice ── */
+.centerWrap {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  padding: 1.25rem;
+}
+
+/* ── Setup card ──────────────────────────────────────────── */
+.setupCard,
+.loadingCard {
+  width: 100%;
+  max-width: 460px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 18px;
+  padding: 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  box-shadow: 0 8px 30px rgba(17, 24, 39, 0.08);
+  text-align: center;
+  align-items: center;
+}
+
+.setupTitle {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--indigo-600);
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.setupSubtitle {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin: 0;
+  line-height: 1.6;
+}
+
+.countRow {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+  width: 100%;
+  align-items: center;
+}
+
+.countLabel {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.countPicker {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.countBtn {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--gray-200);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, color 0.15s, transform 0.1s;
+}
+
+.countBtn:hover {
+  border-color: var(--green-500);
+  transform: translateY(-1px);
+}
+
+.countBtnActive {
+  background: var(--green-500);
+  border-color: var(--green-500);
+  color: #fff;
+}
+
+.estimate {
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  margin: 0;
+}
+
+.setupActions {
+  display: flex;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.setupActions button {
+  flex: 1;
+}
+
+/* ── Loading ─────────────────────────────────────────────── */
+.spinner {
+  width: 36px;
+  height: 36px;
+  border: 3px solid var(--gray-200);
+  border-top-color: var(--green-500);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loadingText {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.errorText {
+  font-size: 0.9rem;
+  color: #b91c1c;
+  margin: 0;
+}
+
+/* ── Practice ────────────────────────────────────────────── */
+.page {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-page);
+  padding: 1.25rem;
+}
+
+.practiceWrap {
+  width: 100%;
+  max-width: 620px;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.deckName {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--indigo-600);
+}
+
+.counter,
+.cardCount {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+  font-variant-numeric: tabular-nums;
+}
+
+.progressTrack {
+  width: 100%;
+  height: 5px;
+  background: var(--gray-200);
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.progressFill {
+  height: 100%;
+  background: linear-gradient(90deg, #14b8a6, #22c55e);
+  border-radius: 99px;
+  transition: width 0.3s ease;
+}
+
+/* ── Card ────────────────────────────────────────────────── */
+.card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  padding: 2.5rem 2rem;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(17, 24, 39, 0.08);
+  transition: border-color 0.15s;
+  position: relative;
+}
+
+.card:hover {
+  border-color: var(--teal-500);
+}
+
+.cardSideLabel {
+  position: absolute;
+  top: 1.25rem;
+  left: 1.5rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.cardSentence,
+.sentence {
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 600;
+  color: var(--text-primary);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* the bracketed target word inside the sentence */
+.blank,
+.bracket {
+  display: inline-block;
+  padding: 0.05em 0.5em;
+  margin: 0 0.15em;
+  border-radius: 6px;
+  background: var(--green-100);
+  color: var(--green-700);
+  font-weight: 800;
+}
+
+.tapHint,
+.cardHint {
+  font-size: 0.8125rem;
+  color: var(--gray-400);
+}
+
+/* ── Answer block (revealed) ─────────────────────────────── */
+.answerBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--gray-200);
+  width: 100%;
+}
+
+.answerLabel {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
+.answerWord {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--green-600);
+  letter-spacing: -0.01em;
+}
+
+.answerFull {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  font-style: italic;
+  text-align: center;
+}
+
+/* ── Controls ────────────────────────────────────────────── */
+.actions,
+.controls {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.controls {
+  justify-content: space-between;
+}
+
+.btnPrimary,
+.btnSecondary {
+  padding: 0.7rem 1.75rem;
+  border-radius: 10px;
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  border: none;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, transform 0.15s;
+}
+
+.btnPrimary {
+  background: var(--green-500);
+  color: #fff;
+}
+
+.btnPrimary:hover {
+  background: var(--green-600);
+  transform: translateY(-1px);
+}
+
+.btnSecondary {
+  background: transparent;
+  color: var(--text-secondary);
+  border: 1px solid var(--gray-200);
+}
+
+.btnSecondary:hover {
+  border-color: var(--indigo-600);
+  color: var(--indigo-600);
+  transform: translateY(-1px);
+}

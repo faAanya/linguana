@@ -219,6 +219,33 @@ async function main() {
   ]);
   console.log("✓ userWords");
 
+  // ── savedWords ───────────────────────────────────────────────
+  // Personal vocabulary collection (the "My words" list). Denormalized
+  // word/translation for cheap listing; wordId links to global words.
+  await createCollectionSafe(db, "savedWords", {
+    validator: {
+      $jsonSchema: {
+        bsonType: "object",
+        required: ["userId", "wordId", "word", "translation", "sourceLanguage", "targetLanguage", "createdAt", "updatedAt"],
+        properties: {
+          userId: { bsonType: "objectId" },
+          wordId: { bsonType: "objectId" },
+          word: { bsonType: "string" },
+          translation: { bsonType: "string" },
+          sourceLanguage: { bsonType: "string" },
+          targetLanguage: { bsonType: "string" },
+          createdAt: { bsonType: "date" },
+          updatedAt: { bsonType: "date" },
+        },
+      },
+    },
+  });
+  await db.collection("savedWords").createIndexes([
+    { key: { userId: 1, createdAt: -1 }, name: "idx_user_saved_words" },
+    { key: { userId: 1, wordId: 1, targetLanguage: 1 }, unique: true, name: "unique_user_saved_word" },
+  ]);
+  console.log("✓ savedWords");
+
   // ── sourceTexts ──────────────────────────────────────────────
   // Added "prompt" to the type enum for step 5 (prompt-based generation).
   await createCollectionSafe(db, "sourceTexts", {
