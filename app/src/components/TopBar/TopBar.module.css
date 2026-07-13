@@ -17,7 +17,7 @@
 .left {
   display: flex;
   align-items: center;
-  gap: 1.25rem;
+  gap: 0.875rem;
   min-width: 0;
 }
 
@@ -34,35 +34,7 @@
   flex-shrink: 0;
 }
 
-/* ── Desktop tabs ── */
-.tabs {
-  display: flex;
-  align-items: center;
-  gap: 0.25rem;
-}
-
-.tab {
-  padding: 0.4rem 0.75rem;
-  border-radius: 8px;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-decoration: none;
-  transition: background 0.15s, color 0.15s;
-  white-space: nowrap;
-}
-
-.tab:hover {
-  background: var(--gray-100);
-  color: var(--text-primary);
-}
-
-.tabActive {
-  background: var(--green-100);
-  color: var(--green-700);
-}
-
-/* ── Burger (hidden on desktop) ── */
+/* ── Burger (only shown when the sidebar is hidden) ── */
 .burger {
   display: none;
   flex-direction: column;
@@ -101,49 +73,27 @@
   position: fixed;
   top: 56px;
   left: 0;
-  right: 0;
+  bottom: 0;
+  width: 260px;
+  max-width: 80vw;
   background: var(--white);
-  border-bottom: 1px solid var(--gray-200);
-  box-shadow: 0 8px 24px rgba(17, 24, 39, 0.12);
-  display: flex;
-  flex-direction: column;
-  padding: 0.5rem;
-  gap: 0.125rem;
+  border-right: 1px solid var(--gray-200);
+  box-shadow: 4px 0 24px rgba(17, 24, 39, 0.12);
+  padding: 1.5rem 0.75rem;
+  overflow-y: auto;
   z-index: 40;
 }
 
-.drawerItem {
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  text-decoration: none;
-}
-
-.drawerItem:hover {
-  background: var(--gray-100);
-}
-
-.drawerItemActive {
-  background: var(--green-100);
-  color: var(--green-700);
-}
-
-/* ── Responsive ── */
-@media (max-width: 640px) {
+@media (max-width: 899px) {
   .bar {
     padding: 0 1rem;
-  }
-  .tabs {
-    display: none;
   }
   .burger {
     display: flex;
   }
 }
 
-@media (min-width: 641px) {
+@media (min-width: 900px) {
   .drawer,
   .backdrop {
     display: none;

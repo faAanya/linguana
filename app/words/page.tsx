@@ -20,11 +20,13 @@ interface WordItem {
 
 type TimeRange = "day" | "3days" | "week" | "month";
 
-const RANGE_MS: Record<TimeRange, number> = {
-  day: 24 * 60 * 60 * 1000,
-  "3days": 3 * 24 * 60 * 60 * 1000,
-  week: 7 * 24 * 60 * 60 * 1000,
-  month: 30 * 24 * 60 * 60 * 1000,
+// Number of calendar days each range spans (anchored to local midnight),
+// so "Day" means "today", "3 days" means today + the two prior days, etc.
+const RANGE_DAYS: Record<TimeRange, number> = {
+  day: 1,
+  "3days": 3,
+  week: 7,
+  month: 30,
 };
 
 export default function MyWordsPage() {
@@ -36,7 +38,10 @@ export default function MyWordsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [count, setCount] = useState(10);
+  // Kept as a raw string so the field can be emptied while typing; any
+  // positive integer is allowed, and an empty field falls back to 1.
+  const [countInput, setCountInput] = useState("10");
+  const count = countInput === "" ? 1 : Math.max(1, parseInt(countInput, 10) || 1);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWord, setEditWord] = useState("");
@@ -96,10 +101,14 @@ export default function MyWordsPage() {
   };
 
   const selectRange = (range: TimeRange) => {
-    const cutoff = Date.now() - RANGE_MS[range];
+    // Anchor to the start of today, then step back whole calendar days.
+    const cutoff = new Date();
+    cutoff.setHours(0, 0, 0, 0);
+    cutoff.setDate(cutoff.getDate() - (RANGE_DAYS[range] - 1));
+    const cutoffMs = cutoff.getTime();
     setSelected(
       new Set(
-        words.filter((w) => new Date(w.createdAt).getTime() >= cutoff).map((w) => w.id)
+        words.filter((w) => new Date(w.createdAt).getTime() >= cutoffMs).map((w) => w.id)
       )
     );
   };
@@ -231,7 +240,7 @@ export default function MyWordsPage() {
       {words.length === 0 ? (
         <div className={styles.empty}>
           <p className={styles.emptyText}>
-            Go to the <a href="/" className={styles.emptyLink}>Add words</a> page to
+            Go to the <a href="/add-words" className={styles.emptyLink}>Add words</a> page to
             start building your collection.
           </p>
         </div>
@@ -251,11 +260,11 @@ export default function MyWordsPage() {
                 N
                 <input
                   className={styles.countInput}
-                  type="number"
-                  min={1}
-                  max={words.length}
-                  value={count}
-                  onChange={(e) => setCount(Math.max(1, Number(e.target.value) || 1))}
+                  type="text"
+                  inputMode="numeric"
+                  value={countInput}
+                  onChange={(e) => setCountInput(e.target.value.replace(/\D/g, ""))}
+                  aria-label="Number of words"
                 />
               </span>
             </div>

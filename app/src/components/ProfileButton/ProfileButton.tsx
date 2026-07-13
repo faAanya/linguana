@@ -59,22 +59,6 @@ export default function ProfileButton({ onLoginClick }: Props) {
 
           <div className={styles.dropdownDivider} />
 
-          <Link href="/words" className={styles.dropdownItem}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M3 2h7l3 3v9a1 1 0 01-1 1H3a1 1 0 01-1-1V3a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
-              <path d="M5 7h6M5 10h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-            </svg>
-            My words
-          </Link>
-
-          <Link href="/decks" className={styles.dropdownItem}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <rect x="1" y="3" width="14" height="10" rx="2" stroke="currentColor" strokeWidth="1.5"/>
-              <path d="M4 3V2.5A1.5 1.5 0 015.5 1h5A1.5 1.5 0 0112 2.5V3" stroke="currentColor" strokeWidth="1.5"/>
-            </svg>
-            My decks
-          </Link>
-
           <Link href="/profile" className={styles.dropdownItem}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="8" cy="5" r="3" stroke="currentColor" strokeWidth="1.5"/>

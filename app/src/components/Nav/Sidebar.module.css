@@ -1,0 +1,19 @@
+.sidebar {
+  position: fixed;
+  top: 56px;
+  left: 0;
+  bottom: 0;
+  width: 220px;
+  padding: 1.5rem 0.75rem;
+  background: var(--bg-card);
+  border-right: 1px solid var(--gray-200);
+  overflow-y: auto;
+  z-index: 30;
+}
+
+/* Hidden on small screens — nav moves into the burger menu */
+@media (max-width: 899px) {
+  .sidebar {
+    display: none;
+  }
+}

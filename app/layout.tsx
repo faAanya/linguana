@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/app/src/components/Auth/AuthContext";
 import TopBar from "@/app/src/components/TopBar/TopBar";
+import Sidebar from "@/app/src/components/Nav/Sidebar";
 import OnboardingGate from "@/app/src/components/Onboarding/OnboardingGate";
+import styles from "./layout.module.css";
 
 export const metadata: Metadata = {
   title: "Linguana — AI Vocabulary Flashcards",
@@ -16,7 +18,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <AuthProvider>
           <OnboardingGate>
             <TopBar />
-            {children}
+            <Sidebar />
+            <div className={styles.content}>{children}</div>
           </OnboardingGate>
         </AuthProvider>
       </body>

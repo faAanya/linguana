@@ -1,0 +1,8 @@
+/* Offsets page content to make room for the fixed left sidebar on
+   wider screens. On small screens the sidebar collapses into the
+   TopBar burger menu, so no offset is needed. */
+@media (min-width: 900px) {
+  .content {
+    padding-left: 220px;
+  }
+}
