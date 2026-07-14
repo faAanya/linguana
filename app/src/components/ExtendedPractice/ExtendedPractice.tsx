@@ -268,8 +268,12 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
 
           {flipped ? (
             <div className={styles.answerBlock}>
-              {/* the word being learned, above the native-language sentence */}
-              <span className={styles.answerWord}>{current.answer || current.word}</span>
+              {/* reveal the counterpart of the word shown on the card front:
+                  native mode shows the native word → reveal the learning word;
+                  learning mode shows the learning word → reveal the native word */}
+              <span className={styles.answerWord}>
+                {mode === "native" ? current.answer || current.word : current.translation}
+              </span>
               <span className={styles.answerFull}>
                 {current.fullTranslation || stripBraces(current.full)}
               </span>
