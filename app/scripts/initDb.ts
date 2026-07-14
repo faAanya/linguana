@@ -180,6 +180,15 @@ async function main() {
           wordId: { bsonType: "objectId" },
           customTranslation: { bsonType: "string" },
           status: { enum: ["new", "learning", "known"] },
+          exampleSentence: {
+            bsonType: "object",
+            properties: {
+              full: { bsonType: "string" },
+              masked: { bsonType: "string" },
+              answer: { bsonType: "string" },
+              fullTranslation: { bsonType: "string" },
+            },
+          },
           createdAt: { bsonType: "date" },
           updatedAt: { bsonType: "date" },
         },

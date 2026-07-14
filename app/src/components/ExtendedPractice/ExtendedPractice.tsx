@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useCallback } from "react";
-import { PracticeDeck } from "@/app/src/models/domain";
+import { useCallback, useState } from "react";
+import { PracticeDeck, SentenceMode } from "@/app/src/models/domain";
 import styles from "./ExtendedPractice.module.css";
 
 interface Props {
@@ -10,10 +10,11 @@ interface Props {
 }
 
 interface SentenceCard {
-  masked: string;   // sentence with [translation] in brackets
-  answer: string;   // the original word to recall
-  full: string;     // natural sentence with the real word
-  word: string;     // the source word this sentence belongs to
+  full: string;            // sentence with the target word (learning language)
+  masked: string;          // target word replaced by [native translation]
+  answer: string;          // the target word
+  fullTranslation: string; // whole sentence in the native language
+  word: string;
   translation: string;
 }
 
@@ -21,62 +22,78 @@ type Stage = "setup" | "loading" | "practice" | "error";
 
 export default function ExtendedPractice({ deck, onDone }: Props) {
   const [stage, setStage] = useState<Stage>("setup");
-  const [count, setCount] = useState(3);
+  const [mode, setMode] = useState<SentenceMode>("native");
   const [cards, setCards] = useState<SentenceCard[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
 
-  // Generate sentences for every word in the deck
+  const shuffle = (arr: SentenceCard[]) => {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  };
+
   const handleStart = useCallback(async () => {
     setStage("loading");
     setErrorMsg(null);
-    const words = deck.cards.filter((c) => c.word.trim());
-    setProgress({ done: 0, total: words.length });
-
-    const all: SentenceCard[] = [];
+    setProgress({ done: 0, total: deck.cards.length });
 
     try {
-      for (let i = 0; i < words.length; i++) {
-        const card = words[i];
-        const res = await fetch("/api/generate-sentences", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            word: card.word,
-            translation: card.translation,
-            count,
-          }),
-        });
+      let all: SentenceCard[] = [];
+
+      if (deck.id) {
+        // Saved deck: sentences are generated once and stored server-side.
+        const res = await fetch(`/api/decks/${deck.id}/sentences`, { method: "POST" });
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(data.error ?? "Generation failed");
+          throw new Error(data.error ?? "Failed to prepare sentences");
         }
         const { sentences } = await res.json();
-        sentences.forEach((s: { masked: string; answer: string; full: string }) => {
-          all.push({
-            masked: s.masked,
-            answer: s.answer,
-            full: s.full,
-            word: card.word,
-            translation: card.translation,
+        all = (sentences as SentenceCard[]).map((s) => ({
+          full: s.full,
+          masked: s.masked,
+          answer: s.answer,
+          fullTranslation: s.fullTranslation ?? "",
+          word: s.word,
+          translation: s.translation,
+        }));
+      } else {
+        // Ephemeral "practice once" deck: generate in-memory, not stored.
+        const words = deck.cards.filter((c) => c.word.trim());
+        for (let i = 0; i < words.length; i++) {
+          const card = words[i];
+          const res = await fetch("/api/generate-sentences", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ word: card.word, translation: card.translation, count: 1 }),
           });
-        });
-        setProgress({ done: i + 1, total: words.length });
+          if (!res.ok) {
+            const data = await res.json();
+            throw new Error(data.error ?? "Generation failed");
+          }
+          const { sentences } = await res.json();
+          const s = sentences?.[0];
+          if (s) {
+            all.push({
+              full: s.full,
+              masked: s.masked,
+              answer: s.answer ?? card.word,
+              fullTranslation: s.fullTranslation ?? "",
+              word: card.word,
+              translation: card.translation,
+            });
+          }
+          setProgress({ done: i + 1, total: words.length });
+        }
       }
 
-      if (all.length === 0) {
-        throw new Error("No sentences were generated");
-      }
+      if (all.length === 0) throw new Error("No sentences were generated");
 
-      // Shuffle so sentences from the same word aren't adjacent
-      for (let i = all.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [all[i], all[j]] = [all[j], all[i]];
-      }
-
-      setCards(all);
+      setCards(shuffle(all));
       setIndex(0);
       setFlipped(false);
       setStage("practice");
@@ -84,86 +101,112 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
       setErrorMsg(err instanceof Error ? err.message : "Something went wrong");
       setStage("error");
     }
-  }, [deck.cards, count]);
+  }, [deck.cards, deck.id]);
 
   const next = () => {
     setFlipped(false);
-    if (index + 1 >= cards.length) {
-      onDone();
-    } else {
-      setIndex((i) => i + 1);
-    }
+    if (index + 1 >= cards.length) onDone();
+    else setIndex((i) => i + 1);
   };
 
-  // Render the masked sentence with the bracketed part highlighted
+  // Strip any square brackets so they never render in the sentence text.
+  const stripBraces = (s: string) => s.replace(/[[\]]/g, "");
+
+  // Render the masked sentence with the native word highlighted (no brackets).
   const renderMasked = (masked: string) => {
     const parts = masked.split(/(\[[^\]]+\])/g);
-    return parts.map((part, i) => {
-      if (part.startsWith("[") && part.endsWith("]")) {
-        return (
-          <span key={i} className={styles.blank}>
-            {part.slice(1, -1)}
-          </span>
-        );
-      }
-      return <span key={i}>{part}</span>;
-    });
+    return parts.map((part, i) =>
+      part.startsWith("[") && part.endsWith("]") ? (
+        <span key={i} className={styles.blank}>{part.slice(1, -1)}</span>
+      ) : (
+        <span key={i}>{stripBraces(part)}</span>
+      )
+    );
   };
 
-  // ── Setup: pick how many sentences per word ──
+  // Render the full sentence with the target word highlighted.
+  const renderWithWord = (full: string, word: string) => {
+    if (!word.trim()) return full;
+    const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const parts = full.split(new RegExp(`(${escaped})`, "gi"));
+    return parts.map((part, i) =>
+      part.toLowerCase() === word.toLowerCase() ? (
+        <span key={i} className={styles.blank}>{part}</span>
+      ) : (
+        <span key={i}>{stripBraces(part)}</span>
+      )
+    );
+  };
+
+  const ModeToggle = () => (
+    <div className={styles.modeToggle} role="tablist" aria-label="Sentence display mode">
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === "native"}
+        className={`${styles.modeBtn} ${mode === "native" ? styles.modeBtnActive : ""}`}
+        onClick={() => setMode("native")}
+      >
+        Native word
+      </button>
+      <button
+        type="button"
+        role="tab"
+        aria-selected={mode === "word"}
+        className={`${styles.modeBtn} ${mode === "word" ? styles.modeBtnActive : ""}`}
+        onClick={() => setMode("word")}
+      >
+        Learning word
+      </button>
+    </div>
+  );
+
+  // ── Setup ──
   if (stage === "setup") {
     return (
       <div className={styles.centerWrap}>
         <div className={styles.setupCard}>
           <h2 className={styles.setupTitle}>Extended practice</h2>
           <p className={styles.setupSubtitle}>
-            We'll create example sentences for each word. You'll see the sentence
-            with the word shown in your language — recall it, then flip to check.
+            Each word gets one example sentence. Choose how it&rsquo;s shown — you can
+            switch modes any time during practice.
           </p>
 
-          <div className={styles.countRow}>
-            <span className={styles.countLabel}>Sentences per word</span>
-            <div className={styles.countPicker}>
-              {[1, 2, 3, 5].map((n) => (
-                <button
-                  key={n}
-                  className={`${styles.countBtn} ${count === n ? styles.countBtnActive : ""}`}
-                  onClick={() => setCount(n)}
-                >
-                  {n}
-                </button>
-              ))}
-            </div>
+          <div className={styles.modeRow}>
+            <span className={styles.countLabel}>Display mode</span>
+            <ModeToggle />
           </div>
 
-          <p className={styles.estimate}>
-            {deck.cards.length} words × {count} = ~{deck.cards.length * count} sentences
+          <p className={styles.modeHint}>
+            {mode === "native"
+              ? "The sentence shows the target word in your native language — recall the learning word."
+              : "The sentence is shown fully in the learning language — recall the meaning."}
           </p>
 
           <div className={styles.setupActions}>
             <button className={styles.btnSecondary} onClick={onDone}>Cancel</button>
-            <button className={styles.btnPrimary} onClick={handleStart}>
-              Start →
-            </button>
+            <button className={styles.btnPrimary} onClick={handleStart}>Start →</button>
           </div>
         </div>
       </div>
     );
   }
 
-  // ── Loading: generating sentences ──
+  // ── Loading ──
   if (stage === "loading") {
     return (
       <div className={styles.centerWrap}>
         <div className={styles.loadingCard}>
           <div className={styles.spinner} />
           <p className={styles.loadingText}>
-            Generating sentences… {progress.done}/{progress.total} words
+            {deck.id
+              ? "Preparing your sentences…"
+              : `Generating sentences… ${progress.done}/${progress.total} words`}
           </p>
           <div className={styles.progressTrack}>
             <div
               className={styles.progressFill}
-              style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 0}%` }}
+              style={{ width: `${progress.total ? (progress.done / progress.total) * 100 : 30}%` }}
             />
           </div>
         </div>
@@ -179,9 +222,7 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
           <p className={styles.errorText}>{errorMsg}</p>
           <div className={styles.setupActions}>
             <button className={styles.btnSecondary} onClick={onDone}>Back</button>
-            <button className={styles.btnPrimary} onClick={() => setStage("setup")}>
-              Try again
-            </button>
+            <button className={styles.btnPrimary} onClick={() => setStage("setup")}>Try again</button>
           </div>
         </div>
       </div>
@@ -209,10 +250,7 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
         </div>
 
         <div className={styles.progressTrack}>
-          <div
-            className={styles.progressFill}
-            style={{ width: `${((index) / cards.length) * 100}%` }}
-          />
+          <div className={styles.progressFill} style={{ width: `${(index / cards.length) * 100}%` }} />
         </div>
 
         <div
@@ -220,29 +258,29 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
           onClick={() => setFlipped((f) => !f)}
           role="button"
           tabIndex={0}
-          aria-label="Tap to reveal the word"
+          aria-label="Tap to reveal"
         >
           <div className={styles.cardSentence}>
-            {renderMasked(current.masked)}
+            {mode === "native"
+              ? renderMasked(current.masked)
+              : renderWithWord(current.full, current.answer || current.word)}
           </div>
 
           {flipped ? (
             <div className={styles.answerBlock}>
-              <span className={styles.answerLabel}>Answer</span>
-              <span className={styles.answerWord}>{current.answer}</span>
-              <span className={styles.answerFull}>{current.full}</span>
+              {/* the word being learned, above the native-language sentence */}
+              <span className={styles.answerWord}>{current.answer || current.word}</span>
+              <span className={styles.answerFull}>
+                {current.fullTranslation || stripBraces(current.full)}
+              </span>
             </div>
           ) : (
-            <span className={styles.tapHint}>tap to reveal the word</span>
+            <span className={styles.tapHint}>tap to reveal</span>
           )}
         </div>
 
         <div className={styles.actions}>
-          {!flipped ? (
-            <button className={styles.btnPrimary} onClick={() => setFlipped(true)}>
-              Reveal
-            </button>
-          ) : (
+          {flipped && (
             <button className={styles.btnPrimary} onClick={next}>
               {index + 1 >= cards.length ? "Finish" : "Next →"}
             </button>

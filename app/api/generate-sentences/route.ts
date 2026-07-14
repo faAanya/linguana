@@ -29,6 +29,7 @@ You are given: a WORD (in the language being learned), its TRANSLATION (in the l
 For each of COUNT sentences:
 - Write a natural example sentence in the WORD's language that uses the WORD.
 - Then produce a "masked" version where the WORD is replaced by its TRANSLATION wrapped in square brackets, e.g. "He never [вздрогнуть] from telling the truth."
+- Also produce "fullTranslation": the ENTIRE "full" sentence translated into the learner's language (the TRANSLATION's language).
 - The learner will see the masked sentence and try to recall the original WORD.
 
 Vary tense, context, and difficulty across sentences.
@@ -39,7 +40,8 @@ Return ONLY a JSON object, no markdown:
     {
       "masked": "He never [translation] from telling the truth.",
       "answer": "the original WORD that belongs in the bracket",
-      "full": "He never WORD from telling the truth."
+      "full": "He never WORD from telling the truth.",
+      "fullTranslation": "the entire sentence in the learner's language"
     }
   ]
 }`;
@@ -76,7 +78,7 @@ export async function POST(request: NextRequest) {
     const cleaned = content.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
 
     let parsed: {
-      sentences: { masked: string; answer: string; full: string }[];
+      sentences: { masked: string; answer: string; full: string; fullTranslation?: string }[];
     };
     try {
       parsed = JSON.parse(cleaned);

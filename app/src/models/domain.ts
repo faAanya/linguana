@@ -40,6 +40,16 @@ export interface UserDeck {
   updatedAt: Date;
 }
 
+// ── ExampleSentence (generated once, stored on the flashcard) ─
+// Both renderings come from a single generation so the two display
+// modes never require regenerating the content.
+export interface ExampleSentence {
+  full: string;            // natural sentence in the learning language ("I bought an apple yesterday.")
+  masked: string;          // target word swapped for its native translation ("I bought an [яблоко] yesterday.")
+  answer: string;          // the target word that belongs in the bracket
+  fullTranslation: string; // the whole sentence translated into the native language ("Я вчера купил яблоко.")
+}
+
 // ── Flashcard (card inside a UserDeck) ───────────────────────
 export interface Flashcard {
   _id?: ObjectId;
@@ -47,9 +57,13 @@ export interface Flashcard {
   wordId: ObjectId;                       // reference to global Word
   customTranslation?: string;             // user override, doesn't touch Word
   status: "new" | "learning" | "known";
+  exampleSentence?: ExampleSentence;      // generated lazily, then reused
   createdAt: Date;
   updatedAt: Date;
 }
+
+// How example sentences are shown during Extended practice.
+export type SentenceMode = "word" | "native";
 
 // ── UserWord (cross-deck learning progress) ───────────────────
 // Tracks whether a user "knows" a word regardless of which deck it's in.
