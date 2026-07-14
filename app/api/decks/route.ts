@@ -129,6 +129,29 @@ export async function POST(request: NextRequest) {
     }));
     await db.collection("flashcards").insertMany(flashcards);
 
+    // ── Mirror cards into the user's personal "My words" collection ──
+    // Upsert by (userId, wordId, targetLanguage) so re-saving doesn't
+    // create duplicates. Cards with no translation are skipped.
+    for (let i = 0; i < cards.length; i++) {
+      const wordValue = cards[i].word.trim();
+      const translationValue = cards[i].translation.trim();
+      if (!wordValue || !translationValue) continue;
+      await db.collection("savedWords").updateOne(
+        { userId, wordId: wordIds[i], targetLanguage: targetLang },
+        {
+          $set: {
+            word: wordValue,
+            translation: translationValue,
+            sourceLanguage: sourceLang,
+            targetLanguage: targetLang,
+            updatedAt: now,
+          },
+          $setOnInsert: { userId, wordId: wordIds[i], createdAt: now },
+        },
+        { upsert: true }
+      );
+    }
+
     // ── Return PracticeDeck shape ──────────────────────────────────
     const insertedCards = await db
       .collection("flashcards")

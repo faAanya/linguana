@@ -18,7 +18,10 @@ interface ExtractionResult {
 }
 
 interface Props {
-  onConfirmed: (pairs: WordPair[]) => void;
+  onConfirmed: (
+    pairs: WordPair[],
+    langs: { sourceLang: string; targetLang: string }
+  ) => void;
 }
 
 interface EditableRow extends WordPair {
@@ -169,7 +172,10 @@ export default function ImageUploader({ onConfirmed }: Props) {
 
   const handleConfirm = () => {
     if (validRows.length === 0) return;
-    onConfirmed(validRows.map(({ word, translation }) => ({ word, translation })));
+    onConfirmed(
+      validRows.map(({ word, translation }) => ({ word, translation })),
+      { sourceLang: "en", targetLang: targetLang || "unknown" }
+    );
   };
 
   const handleReset = () => {

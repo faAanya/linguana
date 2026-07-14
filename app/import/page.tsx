@@ -15,10 +15,17 @@ export default function ImportPage() {
   const { user, loading } = useAuth();
   const [step, setStep] = useState<Step>("upload");
   const [pendingCards, setPendingCards] = useState<PracticeCard[]>([]);
+  const [langs, setLangs] = useState<{ sourceLang: string; targetLang: string }>({
+    sourceLang: "unknown",
+    targetLang: "unknown",
+  });
   const [activeDeck, setActiveDeck] = useState<PracticeDeck | null>(null);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
-  const handleConfirmed = (pairs: { word: string; translation: string }[]) => {
+  const handleConfirmed = (
+    pairs: { word: string; translation: string }[],
+    confirmedLangs: { sourceLang: string; targetLang: string }
+  ) => {
     setPendingCards(
       pairs.map((p) => ({
         word: p.word,
@@ -26,6 +33,7 @@ export default function ImportPage() {
         status: "learning" as const,
       }))
     );
+    setLangs(confirmedLangs);
 
     // Gate: require login before saving
     if (!user) {
@@ -86,6 +94,8 @@ export default function ImportPage() {
         {step === "save" && user && (
           <SaveDeck
             cards={pendingCards}
+            sourceLang={langs.sourceLang}
+            targetLang={langs.targetLang}
             onSaved={handleSaved}
             onBack={() => setStep("upload")}
           />

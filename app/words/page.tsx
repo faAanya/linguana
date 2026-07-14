@@ -47,6 +47,8 @@ export default function MyWordsPage() {
   const [editWord, setEditWord] = useState("");
   const [editTranslation, setEditTranslation] = useState("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [confirmDeleteSelected, setConfirmDeleteSelected] = useState(false);
+  const [deletingSelected, setDeletingSelected] = useState(false);
 
   // Practice / save flows
   const [practiceDeck, setPracticeDeck] = useState<PracticeDeck | null>(null);
@@ -153,6 +155,33 @@ export default function MyWordsPage() {
       setDeletingId(null);
     } catch {
       setError("Failed to delete word");
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    const ids = [...selected];
+    if (ids.length === 0) return;
+    setDeletingSelected(true);
+    setError(null);
+    try {
+      const results = await Promise.all(
+        ids.map((id) => fetch(`/api/words/${id}`, { method: "DELETE" }))
+      );
+      const deleted = new Set(
+        ids.filter((_, i) => results[i].ok)
+      );
+      setWords((prev) => prev.filter((w) => !deleted.has(w.id)));
+      setSelected((prev) => {
+        const next = new Set(prev);
+        deleted.forEach((id) => next.delete(id));
+        return next;
+      });
+      setConfirmDeleteSelected(false);
+      if (deleted.size !== ids.length) setError("Some words could not be deleted");
+    } catch {
+      setError("Failed to delete selected words");
+    } finally {
+      setDeletingSelected(false);
     }
   };
 
@@ -279,20 +308,52 @@ export default function MyWordsPage() {
 
             <div className={styles.builderActions}>
               <span className={styles.selectedCount}>{selectedCount} selected</span>
-              <button
-                className={styles.btnSecondary}
-                onClick={handlePracticeOnce}
-                disabled={selectedCount === 0}
-              >
-                ▶ Practice once
-              </button>
-              <button
-                className={styles.btnPrimary}
-                onClick={handleSaveDeck}
-                disabled={selectedCount === 0}
-              >
-                Save as deck
-              </button>
+
+              {confirmDeleteSelected ? (
+                <>
+                  <span className={styles.confirmText}>
+                    Delete {selectedCount} word{selectedCount === 1 ? "" : "s"}?
+                  </span>
+                  <button
+                    className={styles.btnDanger}
+                    onClick={handleDeleteSelected}
+                    disabled={deletingSelected}
+                  >
+                    {deletingSelected ? "Deleting…" : "Delete"}
+                  </button>
+                  <button
+                    className={styles.btnSecondary}
+                    onClick={() => setConfirmDeleteSelected(false)}
+                    disabled={deletingSelected}
+                  >
+                    Cancel
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    className={styles.btnDangerGhost}
+                    onClick={() => setConfirmDeleteSelected(true)}
+                    disabled={selectedCount === 0}
+                  >
+                    Delete selected
+                  </button>
+                  <button
+                    className={styles.btnSecondary}
+                    onClick={handlePracticeOnce}
+                    disabled={selectedCount === 0}
+                  >
+                    ▶ Practice once
+                  </button>
+                  <button
+                    className={styles.btnPrimary}
+                    onClick={handleSaveDeck}
+                    disabled={selectedCount === 0}
+                  >
+                    Save as deck
+                  </button>
+                </>
+              )}
             </div>
           </div>
 
@@ -336,15 +397,15 @@ export default function MyWordsPage() {
                   ) : (
                     <>
                       <div className={styles.pair}>
-                        <span className={styles.word}>{w.word}</span>
-                        <span className={styles.arrow}>→</span>
-                        <span className={styles.translation}>{w.translation}</span>
+                        <span className={styles.wordLine}>
+                          <span className={styles.langFlag}>{LANGUAGE_MAP[w.sourceLanguage]?.flag ?? ""}</span>
+                          <span className={styles.word}>{w.word}</span>
+                        </span>
+                        <span className={styles.translationLine}>
+                          <span className={styles.langFlag}>{LANGUAGE_MAP[w.targetLanguage]?.flag ?? ""}</span>
+                          <span className={styles.translation}>{w.translation}</span>
+                        </span>
                       </div>
-                      <span className={styles.langBadge}>
-                        {LANGUAGE_MAP[w.sourceLanguage]?.flag ?? ""}
-                        {" → "}
-                        {LANGUAGE_MAP[w.targetLanguage]?.flag ?? w.targetLanguage}
-                      </span>
                       <div className={styles.rowActions}>
                         <button
                           className={styles.iconBtn}

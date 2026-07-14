@@ -1,4 +1,28 @@
 /* ── Centered wrapper for setup / loading / error / practice ── */
+.exitBtn {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 5;
+  padding: 0.45rem 0.85rem;
+  border-radius: 8px;
+  border: 1px solid var(--border-card);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(17, 24, 39, 0.08);
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+
+.exitBtn:hover {
+  border-color: var(--red-500);
+  color: var(--red-500);
+  background: var(--red-100);
+}
+
 .centerWrap {
   position: fixed;
   inset: 0;

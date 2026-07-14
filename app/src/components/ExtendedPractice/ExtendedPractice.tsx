@@ -193,6 +193,15 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
 
   return (
     <div className={styles.centerWrap}>
+      <button
+        className={styles.exitBtn}
+        onClick={onDone}
+        aria-label="Exit practice"
+        title="Exit practice"
+      >
+        ✕ Exit
+      </button>
+
       <div className={styles.practiceWrap}>
         <div className={styles.header}>
           <span className={styles.deckName}>{deck.name} · Extended</span>

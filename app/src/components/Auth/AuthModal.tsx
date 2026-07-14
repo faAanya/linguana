@@ -31,7 +31,13 @@ export default function AuthModal({ onClose, initialMode = "login", onSuccess }:
       if (mode === "register") {
         await requestRegisterCode(name, email);
       } else {
-        await requestLoginCode(email);
+        const { exists } = await requestLoginCode(email);
+        if (!exists) {
+          // No account for this email — switch to sign up with the email kept.
+          setMode("register");
+          setError("No account found for that email. Sign up to create one.");
+          return;
+        }
       }
       setStage("code");
     } catch (err) {

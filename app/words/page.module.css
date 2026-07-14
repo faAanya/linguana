@@ -185,8 +185,48 @@
   border-color: var(--gray-400);
 }
 
+.btnDanger,
+.btnDangerGhost {
+  padding: 0.55rem 1.05rem;
+  border-radius: 10px;
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
+}
+
+.btnDanger {
+  border: none;
+  background: var(--red-500);
+  color: #fff;
+}
+
+.btnDanger:hover:not(:disabled) {
+  background: #dc2626;
+}
+
+.btnDangerGhost {
+  border: 1px solid var(--border-card);
+  background: var(--white);
+  color: var(--red-500);
+}
+
+.btnDangerGhost:hover:not(:disabled) {
+  border-color: var(--red-500);
+  background: var(--red-100);
+}
+
+.confirmText {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
 .btnPrimary:disabled,
-.btnSecondary:disabled {
+.btnSecondary:disabled,
+.btnDanger:disabled,
+.btnDangerGhost:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
@@ -230,33 +270,46 @@
 
 .pair {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.2rem;
   min-width: 0;
   flex: 1;
+}
+
+.wordLine,
+.translationLine {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.langFlag {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  line-height: 1.3;
 }
 
 .word {
   font-weight: 700;
   color: var(--text-primary);
+  overflow-wrap: anywhere;
 }
 
-.arrow {
-  color: var(--gray-400);
-  flex-shrink: 0;
+.translationLine {
+  padding-top: 0.2rem;
+  border-top: 1px solid var(--gray-100);
 }
 
 .translation {
   color: var(--text-secondary);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 }
 
-.langBadge {
-  font-size: 0.85rem;
+/* Arrow separator — only used in the inline edit view */
+.arrow {
+  color: var(--gray-400);
   flex-shrink: 0;
-  color: var(--text-muted);
 }
 
 .rowActions {

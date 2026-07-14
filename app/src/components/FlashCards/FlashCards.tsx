@@ -197,6 +197,15 @@ export default function Flashcards({ deck, onDone }: Props) {
 
   return (
     <div className={styles.page}>
+      <button
+        className={styles.exitBtn}
+        onClick={onDone}
+        aria-label="Exit practice"
+        title="Exit practice"
+      >
+        ✕ Exit
+      </button>
+
       {/* LEFT — still learning */}
       <div
         className={`${styles.sideZone} ${styles.zoneLearning} ${activeZone === "learning" ? styles.zoneActive : ""}`}
@@ -226,7 +235,7 @@ export default function Flashcards({ deck, onDone }: Props) {
             ref={sceneRef}
             className={`${styles.cardScene} ${flipped ? styles.flipped : ""} ${
               dragging || skipTransition ? styles.draggingScene : styles.settlingScene
-            }`}
+            } ${skipTransition ? styles.noFlip : ""}`}
             data-exiting={exitDirection ? "true" : "false"}
             style={{ transform }}
             onPointerDown={handlePointerDown}

@@ -1,0 +1,15 @@
+.content {
+  min-height: 100vh;
+}
+
+/* Offsets page content for the fixed left sidebar on wider screens.
+   On small screens the sidebar collapses into the TopBar burger menu. */
+.contentOffset {
+  min-height: 100vh;
+}
+
+@media (min-width: 900px) {
+  .contentOffset {
+    padding-left: 220px;
+  }
+}

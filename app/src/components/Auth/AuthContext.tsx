@@ -7,7 +7,7 @@ interface AuthContextValue {
   user: PublicUser | null;
   loading: boolean;
   requestRegisterCode: (name: string, email: string) => Promise<void>;
-  requestLoginCode: (email: string) => Promise<void>;
+  requestLoginCode: (email: string) => Promise<{ exists: boolean }>;
   verifyCode: (email: string, code: string) => Promise<void>;
   logout: () => Promise<void>;
   refresh: () => Promise<void>;
@@ -51,6 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.error ?? "Failed to send code");
+    return { exists: !!data.exists };
   }, []);
 
   const verifyCode = useCallback(async (email: string, code: string) => {

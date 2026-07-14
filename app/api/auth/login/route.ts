@@ -18,8 +18,8 @@ export async function POST(request: NextRequest) {
 
     const user = await db.collection("users").findOne({ email: normalizedEmail });
 
-    // Always respond the same way whether or not the account exists,
-    // to avoid revealing which emails are registered. Only send if it exists.
+    // Tell the client whether the account exists so the UI can steer an
+    // unregistered visitor to sign up. Only send a code if it exists.
     if (user) {
       const code = generateCode();
       await storeCode(normalizedEmail, code, { mode: "login" });
@@ -28,7 +28,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       ok: true,
-      message: "If that email is registered, a code has been sent",
+      exists: !!user,
+      message: user
+        ? "A login code has been sent"
+        : "No account found for that email",
     });
   } catch (err) {
     console.error("Login error:", err);
