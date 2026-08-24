@@ -298,7 +298,7 @@ async function main() {
   await dropIndexSafe(db, "savedWords", "unique_user_saved_word");
   await db.collection("savedWords").createIndexes([
     { key: { userId: 1, createdAt: -1 }, name: "idx_user_saved_words" },
-    { key: { userId: 1, word: 1, sourceLanguage: 1, targetLanguage: 1 }, unique: true, name: "unique_user_saved_word" },
+    { key: { userId: 1, word: 1, translation: 1, sourceLanguage: 1, targetLanguage: 1 }, unique: true, name: "unique_user_saved_word" },
   ]);
   console.log("✓ savedWords");
 

@@ -157,6 +157,65 @@
   background: var(--gray-50);
 }
 
+/* ── Translation options (pick which to save) ── */
+.pickHint {
+  color: var(--teal-500);
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.optionsBox {
+  min-height: 84px;
+  padding: 0.75rem;
+  border: 1px solid var(--border-card);
+  border-radius: 12px;
+  background: var(--gray-50);
+  display: flex;
+  align-items: flex-start;
+}
+
+.optionsEmpty {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  align-self: center;
+}
+
+.optionChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  width: 100%;
+}
+
+.optionChip {
+  padding: 0.4rem 0.75rem;
+  border-radius: 99px;
+  border: 1px solid var(--border-card);
+  background: var(--white);
+  color: var(--text-primary);
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.optionChip:hover {
+  border-color: var(--green-500);
+}
+
+.optionChipSelected {
+  border-color: var(--green-500);
+  background: var(--green-500);
+  color: #fff;
+}
+
+.optionChipSelected::before {
+  content: "✓ ";
+  font-weight: 800;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

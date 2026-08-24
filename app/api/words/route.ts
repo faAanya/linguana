@@ -70,13 +70,22 @@ export async function POST(request: NextRequest) {
     const now = new Date();
     const userId = new ObjectId(session.userId);
 
+    // Each distinct translation is its own saved pair — the translation is
+    // part of the key, so saving several translations of one word keeps them all.
     const saved = await db.collection("savedWords").findOneAndUpdate(
-      { userId, word: word.trim(), sourceLanguage: sourceLang, targetLanguage: targetLang },
       {
-        $set: { translation: translation.trim(), updatedAt: now },
+        userId,
+        word: word.trim(),
+        translation: translation.trim(),
+        sourceLanguage: sourceLang,
+        targetLanguage: targetLang,
+      },
+      {
+        $set: { updatedAt: now },
         $setOnInsert: {
           userId,
           word: word.trim(),
+          translation: translation.trim(),
           sourceLanguage: sourceLang,
           targetLanguage: targetLang,
           createdAt: now,

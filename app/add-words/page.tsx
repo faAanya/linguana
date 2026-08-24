@@ -15,12 +15,14 @@ interface RecentWord {
   targetLanguage: string;
 }
 
+const LS_SOURCE = "addwords.sourceLang";
+const LS_TARGET = "addwords.targetLang";
+
 export default function AddWordsPage() {
   const { user } = useAuth();
 
-  // Language selection: null override means "use the user's default".
-  // Deriving the default during render (instead of syncing via an effect)
-  // keeps the dropdowns correct as soon as the user's languages load.
+  // Language selection: null override means "use the user's default". Saved
+  // choices are loaded from localStorage after mount (below).
   const [sourceOverride, setSourceOverride] = useState<string | null>(null);
   const [targetOverride, setTargetOverride] = useState<string | null>(null);
 
@@ -33,57 +35,72 @@ export default function AddWordsPage() {
   const sourceLang = sourceOverride ?? defaultSource;
   const targetLang = targetOverride ?? defaultTarget;
 
-  // Order the dropdown so the user's own languages come first.
+  // Load the saved language preferences once, on the client.
+  useEffect(() => {
+    try {
+      const s = localStorage.getItem(LS_SOURCE);
+      const t = localStorage.getItem(LS_TARGET);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (s && s in LANGUAGE_MAP) setSourceOverride(s);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      if (t && t in LANGUAGE_MAP) setTargetOverride(t);
+    } catch {
+      /* localStorage unavailable — fall back to defaults */
+    }
+  }, []);
+
+  const persist = (key: string, value: string) => {
+    try { localStorage.setItem(key, value); } catch { /* ignore */ }
+  };
+
   const options: Language[] = useMemo(() => {
-    const own = [
-      ...(user?.nativeLanguages ?? []),
-      ...(user?.learningLanguages ?? []),
-    ];
+    const own = [...(user?.nativeLanguages ?? []), ...(user?.learningLanguages ?? [])];
     const ownUnique = [...new Set(own)].filter((c) => c in LANGUAGE_MAP);
     const rest = LANGUAGES.map((l) => l.code).filter((c) => !ownUnique.includes(c));
     return [...ownUnique, ...rest].map((c) => LANGUAGE_MAP[c]);
   }, [user]);
 
   const [word, setWord] = useState("");
-  const [translation, setTranslation] = useState("");
+  const [candidates, setCandidates] = useState<string[]>([]);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const [translating, setTranslating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentWord[]>([]);
   const [showAuth, setShowAuth] = useState(false);
 
-  // The translation is stale whenever the source word changes; track what
-  // text a translation belongs to so we don't save a mismatched pair.
   const translatedFor = useRef<string>("");
 
   const runTranslate = useCallback(
     async (text: string) => {
       const trimmed = text.trim();
       if (!trimmed) return;
-      if (!user) {
-        setShowAuth(true);
-        return;
-      }
+      if (!user) { setShowAuth(true); return; }
+
       if (sourceLang === targetLang) {
-        setTranslation(trimmed);
+        setCandidates([trimmed]);
+        setSelected(new Set([trimmed]));
         translatedFor.current = trimmed;
         return;
       }
+
       setTranslating(true);
       setError(null);
       try {
-        const res = await fetch("/api/translate", {
+        const res = await fetch("/api/translate/options", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: [{ text: trimmed }], sourceLang, targetLang }),
+          body: JSON.stringify({ text: trimmed, sourceLang, targetLang }),
         });
         if (!res.ok) {
           const data = await res.json();
           throw new Error(data.error ?? "Translation failed");
         }
-        const { translations } = await res.json();
-        const result = translations?.[0]?.translation ?? "";
-        setTranslation(result);
+        const { options: opts } = await res.json();
+        const list: string[] = Array.isArray(opts) ? opts : [];
+        setCandidates(list);
+        // Pre-select the most common translation
+        setSelected(new Set(list.slice(0, 1)));
         translatedFor.current = trimmed;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Translation failed");
@@ -94,7 +111,7 @@ export default function AddWordsPage() {
     [sourceLang, targetLang, user]
   );
 
-  // Auto-translate a short moment after the user stops typing.
+  // Auto-translate shortly after the user stops typing.
   useEffect(() => {
     const trimmed = word.trim();
     if (!trimmed || !user) return;
@@ -103,44 +120,79 @@ export default function AddWordsPage() {
     return () => clearTimeout(t);
   }, [word, runTranslate, user]);
 
+  const changeSource = (code: string) => {
+    setSourceOverride(code);
+    persist(LS_SOURCE, code);
+    translatedFor.current = "";
+    setCandidates([]);
+    setSelected(new Set());
+  };
+
+  const changeTarget = (code: string) => {
+    setTargetOverride(code);
+    persist(LS_TARGET, code);
+    translatedFor.current = "";
+    setCandidates([]);
+    setSelected(new Set());
+  };
+
   const swap = () => {
     setSourceOverride(targetLang);
     setTargetOverride(sourceLang);
-    setWord(translation);
-    setTranslation(word);
+    persist(LS_SOURCE, targetLang);
+    persist(LS_TARGET, sourceLang);
+    setWord([...selected][0] ?? candidates[0] ?? "");
+    setCandidates([]);
+    setSelected(new Set());
     translatedFor.current = "";
   };
 
+  const toggleOption = (opt: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(opt)) next.delete(opt);
+      else next.add(opt);
+      return next;
+    });
+  };
+
   const handleSave = async () => {
-    if (!word.trim() || !translation.trim()) return;
-    if (!user) {
-      setShowAuth(true);
-      return;
-    }
+    const picks = [...selected];
+    if (!word.trim() || picks.length === 0) return;
+    if (!user) { setShowAuth(true); return; }
+
     setSaving(true);
     setError(null);
     try {
-      const res = await fetch("/api/words", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          word: word.trim(),
-          translation: translation.trim(),
-          sourceLang,
-          targetLang,
-        }),
+      const results = await Promise.all(
+        picks.map((tr) =>
+          fetch("/api/words", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ word: word.trim(), translation: tr, sourceLang, targetLang }),
+          }).then(async (r) => {
+            if (!r.ok) throw new Error((await r.json()).error ?? "Failed to save");
+            return r.json();
+          })
+        )
+      );
+
+      setRecent((prev) => {
+        const merged = [
+          ...results.map((s) => ({
+            id: s.id,
+            word: s.word,
+            translation: s.translation,
+            targetLanguage: s.targetLanguage,
+          })),
+          ...prev,
+        ];
+        return merged.filter((v, i, arr) => arr.findIndex((x) => x.id === v.id) === i);
       });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Failed to save");
-      }
-      const saved = await res.json();
-      setRecent((prev) => [
-        { id: saved.id, word: saved.word, translation: saved.translation, targetLanguage: saved.targetLanguage },
-        ...prev.filter((r) => r.id !== saved.id),
-      ]);
+
       setWord("");
-      setTranslation("");
+      setCandidates([]);
+      setSelected(new Set());
       translatedFor.current = "";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -149,7 +201,7 @@ export default function AddWordsPage() {
     }
   };
 
-  const canSave = !!word.trim() && !!translation.trim() && !saving;
+  const canSave = !!word.trim() && selected.size > 0 && !saving;
 
   return (
     <>
@@ -157,8 +209,8 @@ export default function AddWordsPage() {
         <div className={styles.header}>
           <h1 className={styles.title}>Add words</h1>
           <p className={styles.subtitle}>
-            Type a word, translate it into a language you&rsquo;re learning, and save it
-            to <Link href="/words" className={styles.inlineLink}>your collection</Link>.
+            Type a word, pick the translations you want, and save them to{" "}
+            <Link href="/words" className={styles.inlineLink}>your collection</Link>.
           </p>
         </div>
 
@@ -167,7 +219,7 @@ export default function AddWordsPage() {
             <select
               className={styles.langSelect}
               value={sourceLang}
-              onChange={(e) => { setSourceOverride(e.target.value); translatedFor.current = ""; }}
+              onChange={(e) => changeSource(e.target.value)}
               aria-label="Translate from"
             >
               {options.map((l) => (
@@ -182,7 +234,7 @@ export default function AddWordsPage() {
             <select
               className={styles.langSelect}
               value={targetLang}
-              onChange={(e) => { setTargetOverride(e.target.value); translatedFor.current = ""; }}
+              onChange={(e) => changeTarget(e.target.value)}
               aria-label="Translate to"
             >
               {options.map((l) => (
@@ -212,15 +264,31 @@ export default function AddWordsPage() {
               <label className={styles.paneLabel}>
                 {LANGUAGE_MAP[targetLang]?.name ?? targetLang}
                 {translating && <span className={styles.translatingDot}>· translating…</span>}
+                {!translating && candidates.length > 0 && (
+                  <span className={styles.pickHint}>· tap to pick</span>
+                )}
               </label>
-              <textarea
-                className={`${styles.textarea} ${styles.textareaOut}`}
-                value={translation}
-                onChange={(e) => setTranslation(e.target.value)}
-                placeholder="Translation appears here — edit if needed"
-                rows={3}
-                maxLength={120}
-              />
+              <div className={styles.optionsBox}>
+                {candidates.length === 0 ? (
+                  <span className={styles.optionsEmpty}>
+                    {translating ? "Finding translations…" : "Translations appear here — tap the ones to save"}
+                  </span>
+                ) : (
+                  <div className={styles.optionChips}>
+                    {candidates.map((opt) => (
+                      <button
+                        key={opt}
+                        type="button"
+                        className={`${styles.optionChip} ${selected.has(opt) ? styles.optionChipSelected : ""}`}
+                        onClick={() => toggleOption(opt)}
+                        aria-pressed={selected.has(opt)}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -235,7 +303,9 @@ export default function AddWordsPage() {
               {translating ? "Translating…" : "Translate"}
             </button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={!canSave}>
-              {saving ? "Saving…" : "＋ Save word"}
+              {saving
+                ? "Saving…"
+                : `＋ Save${selected.size > 1 ? ` ${selected.size} words` : " word"}`}
             </button>
           </div>
         </div>
