@@ -32,7 +32,7 @@ export default function TopBar({ showNav = true }: Props) {
             </button>
           )}
 
-          <Link href="/" className={styles.logo}>Linguana</Link>
+          <Link href="/" className={styles.logo}>StudyWally</Link>
         </div>
 
         <ProfileButton onLoginClick={() => setShowAuth(true)} />

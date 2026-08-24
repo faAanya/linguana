@@ -31,6 +31,62 @@ async function createCollectionSafe(
   }
 }
 
+// Bring an existing collection's validator up to date. Tries collMod first
+// (non-destructive). If the DB user lacks the collMod privilege, falls back to
+// dropping + recreating the collection — but only when ALLOW_RECREATE=1, since
+// that clears data unless preserveData restores it.
+async function ensureValidator(
+  db: Db,
+  name: string,
+  validator: Record<string, unknown>,
+  opts: { preserveData: boolean }
+) {
+  try {
+    await db.command({ collMod: name, validator, validationLevel: "moderate" });
+    console.log(`  ↻ ${name} validator updated (collMod)`);
+    return;
+  } catch (err: any) {
+    if (err.codeName === "NamespaceNotFound") return; // just created with validator
+    console.warn(`  ! collMod on ${name} denied: ${err.message}`);
+  }
+
+  if (process.env.ALLOW_RECREATE !== "1") {
+    console.warn(
+      `    → ${name} validator NOT updated. Either grant the DB user collMod, ` +
+      `or re-run with ALLOW_RECREATE=1 to recreate it` +
+      (opts.preserveData ? " (its data is preserved)." : " (⚠ its documents are cleared).")
+    );
+    return;
+  }
+
+  let backup: Record<string, unknown>[] = [];
+  if (opts.preserveData) {
+    backup = await db.collection(name).find({}).toArray();
+    console.log(`    backing up ${backup.length} ${name} docs`);
+  }
+  await db.collection(name).drop().catch(() => {});
+  await db.createCollection(name, { validator });
+  console.log(`  ♻ recreated ${name} with the new validator`);
+  if (opts.preserveData && backup.length) {
+    try {
+      await db.collection(name).insertMany(backup, { ordered: false });
+      console.log(`    restored ${backup.length} ${name} docs`);
+    } catch (e: any) {
+      console.warn(`    some ${name} docs were not restored: ${e.message}`);
+    }
+  }
+}
+
+// Drop an index if it exists (used to remove obsolete unique constraints).
+async function dropIndexSafe(db: Db, coll: string, index: string) {
+  try {
+    await db.collection(coll).dropIndex(index);
+    console.log(`  ✂ dropped ${coll}.${index}`);
+  } catch {
+    /* index doesn't exist — fine */
+  }
+}
+
 async function main() {
   const client = new MongoClient(uri);
   await client.connect();
@@ -98,26 +154,9 @@ async function main() {
   ]);
   console.log("✓ verificationCodes");
 
-  // ── words ────────────────────────────────────────────────────
-  await createCollectionSafe(db, "words", {
-    validator: {
-      $jsonSchema: {
-        bsonType: "object",
-        required: ["value", "language", "translations", "createdAt"],
-        properties: {
-          value: { bsonType: "string" },
-          language: { bsonType: "string" },
-          translations: { bsonType: "object" },
-          createdAt: { bsonType: "date" },
-        },
-      },
-    },
-  });
-  await db.collection("words").createIndexes([
-    { key: { value: 1, language: 1 }, unique: true, name: "unique_word_language" },
-    { key: { language: 1 }, name: "idx_language" },
-  ]);
-  console.log("✓ words");
+  // (The global "words" dictionary collection was removed — flashcards embed
+  //  their own words and "My words" is self-contained. Any existing `words`
+  //  collection is simply left unused.)
 
   // ── deckTemplates ────────────────────────────────────────────
   await createCollectionSafe(db, "deckTemplates", {
@@ -157,6 +196,9 @@ async function main() {
           sourceLanguage: { bsonType: "string" },
           targetLanguage: { bsonType: "string" },
           copiedFromTemplateId: { bsonType: "objectId" },
+          pinned: { bsonType: "bool" },
+          resumeIndex: { bsonType: "number" },
+          cardCount: { bsonType: "number" },
           createdAt: { bsonType: "date" },
           updatedAt: { bsonType: "date" },
         },
@@ -170,36 +212,41 @@ async function main() {
   console.log("✓ userDecks");
 
   // ── flashcards ───────────────────────────────────────────────
-  await createCollectionSafe(db, "flashcards", {
-    validator: {
-      $jsonSchema: {
-        bsonType: "object",
-        required: ["userDeckId", "wordId", "status", "createdAt", "updatedAt"],
-        properties: {
-          userDeckId: { bsonType: "objectId" },
-          wordId: { bsonType: "objectId" },
-          customTranslation: { bsonType: "string" },
-          status: { enum: ["new", "learning", "known"] },
-          exampleSentence: {
-            bsonType: "object",
-            properties: {
-              full: { bsonType: "string" },
-              masked: { bsonType: "string" },
-              answer: { bsonType: "string" },
-              fullTranslation: { bsonType: "string" },
-            },
+  // Words are embedded directly on the card (no shared dictionary). The same
+  // word can appear independently in many decks. Status is in_progress|learnt.
+  const flashcardsValidator = {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["userDeckId", "userId", "word", "translation", "order", "status", "createdAt", "updatedAt"],
+      properties: {
+        userDeckId: { bsonType: "objectId" },
+        userId: { bsonType: "objectId" },
+        word: { bsonType: "string" },
+        translation: { bsonType: "string" },
+        order: { bsonType: "number" },
+        status: { enum: ["in_progress", "learnt"] },
+        exampleSentence: {
+          bsonType: "object",
+          properties: {
+            full: { bsonType: "string" },
+            masked: { bsonType: "string" },
+            answer: { bsonType: "string" },
+            fullTranslation: { bsonType: "string" },
           },
-          createdAt: { bsonType: "date" },
-          updatedAt: { bsonType: "date" },
         },
+        createdAt: { bsonType: "date" },
+        updatedAt: { bsonType: "date" },
       },
     },
-  });
+  };
+  await createCollectionSafe(db, "flashcards", { validator: flashcardsValidator });
+  await ensureValidator(db, "flashcards", flashcardsValidator, { preserveData: false });
+  // Obsolete indexes from the wordId-based schema
+  await dropIndexSafe(db, "flashcards", "unique_card_in_deck");
+  await dropIndexSafe(db, "flashcards", "idx_word_cards");
   await db.collection("flashcards").createIndexes([
-    { key: { userDeckId: 1 }, name: "idx_deck_cards" },
-    { key: { wordId: 1 }, name: "idx_word_cards" },
+    { key: { userDeckId: 1, order: 1 }, name: "idx_deck_order" },
     { key: { userDeckId: 1, status: 1 }, name: "idx_deck_status" },
-    { key: { userDeckId: 1, wordId: 1 }, unique: true, name: "unique_card_in_deck" },
   ]);
   console.log("✓ flashcards");
 
@@ -229,29 +276,29 @@ async function main() {
   console.log("✓ userWords");
 
   // ── savedWords ───────────────────────────────────────────────
-  // Personal vocabulary collection (the "My words" list). Denormalized
-  // word/translation for cheap listing; wordId links to global words.
-  await createCollectionSafe(db, "savedWords", {
-    validator: {
-      $jsonSchema: {
-        bsonType: "object",
-        required: ["userId", "wordId", "word", "translation", "sourceLanguage", "targetLanguage", "createdAt", "updatedAt"],
-        properties: {
-          userId: { bsonType: "objectId" },
-          wordId: { bsonType: "objectId" },
-          word: { bsonType: "string" },
-          translation: { bsonType: "string" },
-          sourceLanguage: { bsonType: "string" },
-          targetLanguage: { bsonType: "string" },
-          createdAt: { bsonType: "date" },
-          updatedAt: { bsonType: "date" },
-        },
+  // Personal vocabulary collection (the "My words" list). Fully self-contained
+  // and independent of decks/flashcards — no reference to any shared word.
+  const savedWordsValidator = {
+    $jsonSchema: {
+      bsonType: "object",
+      required: ["userId", "word", "translation", "sourceLanguage", "targetLanguage", "createdAt", "updatedAt"],
+      properties: {
+        userId: { bsonType: "objectId" },
+        word: { bsonType: "string" },
+        translation: { bsonType: "string" },
+        sourceLanguage: { bsonType: "string" },
+        targetLanguage: { bsonType: "string" },
+        createdAt: { bsonType: "date" },
+        updatedAt: { bsonType: "date" },
       },
     },
-  });
+  };
+  await createCollectionSafe(db, "savedWords", { validator: savedWordsValidator });
+  await ensureValidator(db, "savedWords", savedWordsValidator, { preserveData: true });
+  await dropIndexSafe(db, "savedWords", "unique_user_saved_word");
   await db.collection("savedWords").createIndexes([
     { key: { userId: 1, createdAt: -1 }, name: "idx_user_saved_words" },
-    { key: { userId: 1, wordId: 1, targetLanguage: 1 }, unique: true, name: "unique_user_saved_word" },
+    { key: { userId: 1, word: 1, sourceLanguage: 1, targetLanguage: 1 }, unique: true, name: "unique_user_saved_word" },
   ]);
   console.log("✓ savedWords");
 

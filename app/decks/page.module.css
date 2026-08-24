@@ -143,6 +143,46 @@
   color: var(--indigo-600);
 }
 
+.pinBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  margin-right: auto;
+}
+
+.pinBtn:hover {
+  background: var(--green-100);
+  color: var(--green-600);
+}
+
+.pinBtnActive {
+  color: var(--green-600);
+  background: var(--green-100);
+}
+
+.cardMeta {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+/* Tilted pin shown next to the card count when the deck is pinned */
+.pinnedMark {
+  display: inline-flex;
+  align-items: center;
+  color: var(--green-600);
+  transform: rotate(40deg);
+}
+
 .deleteBtn:hover {
   background: var(--red-100);
   color: var(--red-500);

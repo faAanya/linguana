@@ -276,6 +276,115 @@
   border-color: var(--teal-500);
 }
 
+.finishedEmoji {
+  font-size: 2.75rem;
+  line-height: 1;
+}
+
+/* ── Swipe + flip card (matches the General flashcards mode) ── */
+.stage {
+  position: relative;
+  width: 100%;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 480px) {
+  .stage { height: 280px; }
+}
+
+.cardScene {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  perspective: 1000px;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  z-index: 3;
+}
+
+/* Decorative cards stacked behind the active one (depth effect) */
+.stackBehind {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(17, 24, 39, 0.06);
+  pointer-events: none;
+  transition: transform 0.36s cubic-bezier(0.3, 0, 0.6, 1);
+}
+
+.depth1 {
+  transform: translateY(-10px) scale(0.95);
+  z-index: 2;
+}
+
+.depth2 {
+  transform: translateY(-20px) scale(0.9);
+  z-index: 1;
+  opacity: 0.9;
+}
+
+.cardScene:active { cursor: grabbing; }
+
+.draggingScene { transition: none; }
+.settlingScene {
+  transition: transform 0.36s cubic-bezier(0.3, 0, 0.6, 1), opacity 0.36s ease-out;
+}
+
+/* keep the flip from animating back while swapping to the next card */
+.noFlip .cardInner { transition: none; }
+
+.cardInner {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.cardScene.flipped .cardInner { transform: rotateY(180deg); }
+
+.cardFace {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-card);
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.9rem;
+  padding: 2rem;
+  box-shadow: 0 8px 30px rgba(17, 24, 39, 0.1);
+}
+
+.cardBack {
+  transform: rotateY(180deg);
+  background: var(--bg-hero);
+  border-color: var(--teal-500);
+}
+
+.faceLabel {
+  position: absolute;
+  top: 1.1rem;
+  left: 1.25rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gray-400);
+}
+
 .cardSideLabel {
   position: absolute;
   top: 1.25rem;

@@ -33,12 +33,8 @@ export async function POST(
 
     const cards = await db
       .collection("flashcards")
-      .aggregate([
-        { $match: { userDeckId: deckId } },
-        { $sort: { createdAt: 1 } },
-        { $lookup: { from: "words", localField: "wordId", foreignField: "_id", as: "wordDoc" } },
-        { $unwind: "$wordDoc" },
-      ])
+      .find({ userDeckId: deckId })
+      .sort({ order: 1, createdAt: 1 })
       .toArray();
 
     const sentences: {
@@ -52,8 +48,8 @@ export async function POST(
     }[] = [];
 
     for (const c of cards) {
-      const word: string = c.wordDoc.value;
-      const translation: string = c.customTranslation ?? "";
+      const word: string = c.word ?? "";
+      const translation: string = c.translation ?? "";
 
       let example = c.exampleSentence;
 

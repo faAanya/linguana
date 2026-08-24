@@ -5,8 +5,11 @@ import { AuthTokenPayload, PublicUser } from "@/app/src/models/auth";
 const ACCESS_SECRET = process.env.JWT_ACCESS_SECRET!;
 const REFRESH_SECRET = process.env.JWT_REFRESH_SECRET!;
 
-const ACCESS_TOKEN_TTL = "1h";
-const REFRESH_TOKEN_TTL = "30d";
+// Long-lived access token so an active user isn't logged out when the
+// silent refresh doesn't happen to run. The refresh token extends the
+// window further. Both are stateless JWTs (no server-side revocation).
+const ACCESS_TOKEN_TTL = "30d";
+const REFRESH_TOKEN_TTL = "60d";
 const ACCESS_COOKIE = "access_token";
 const REFRESH_COOKIE = "refresh_token";
 
@@ -35,7 +38,7 @@ export async function setAuthCookies(payload: AuthTokenPayload) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60,                    // 1h in seconds
+    maxAge: 60 * 60 * 24 * 30,         // 30 days in seconds
     path: "/",
   });
 
@@ -43,7 +46,7 @@ export async function setAuthCookies(payload: AuthTokenPayload) {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 30,         // 30 days in seconds
+    maxAge: 60 * 60 * 24 * 60,         // 60 days in seconds
     path: "/",
   });
 }

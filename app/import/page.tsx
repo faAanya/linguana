@@ -30,7 +30,7 @@ export default function ImportPage() {
       pairs.map((p) => ({
         word: p.word,
         translation: p.translation,
-        status: "learning" as const,
+        status: "in_progress" as const,
       }))
     );
     setLangs(confirmedLangs);

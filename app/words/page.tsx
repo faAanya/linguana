@@ -18,13 +18,12 @@ interface WordItem {
   createdAt: string;
 }
 
-type TimeRange = "day" | "3days" | "week" | "month";
+type TimeRange = "day" | "week" | "month";
 
 // Number of calendar days each range spans (anchored to local midnight),
-// so "Day" means "today", "3 days" means today + the two prior days, etc.
+// so "Day" means "today", "Week" means the last 7 calendar days, etc.
 const RANGE_DAYS: Record<TimeRange, number> = {
   day: 1,
-  "3days": 3,
   week: 7,
   month: 30,
 };
@@ -38,10 +37,9 @@ export default function MyWordsPage() {
   const [error, setError] = useState<string | null>(null);
 
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  // Kept as a raw string so the field can be emptied while typing; any
-  // positive integer is allowed, and an empty field falls back to 1.
-  const [countInput, setCountInput] = useState("10");
-  const count = countInput === "" ? 1 : Math.max(1, parseInt(countInput, 10) || 1);
+  // Which quick-select control produced the current selection (so pressing
+  // the same one again clears it). Manual checkbox edits reset this to null.
+  const [activeSelection, setActiveSelection] = useState<"all" | TimeRange | null>(null);
 
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editWord, setEditWord] = useState("");
@@ -77,7 +75,14 @@ export default function MyWordsPage() {
   }, [user, loading, router, loadWords]);
 
   // ── Selection helpers ──────────────────────────────────────────
+  const clearSelection = () => {
+    setSelected(new Set());
+    setActiveSelection(null);
+  };
+
   const toggle = (id: string) => {
+    // A manual edit means the selection no longer matches a quick-select.
+    setActiveSelection(null);
     setSelected((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
@@ -86,33 +91,34 @@ export default function MyWordsPage() {
     });
   };
 
-  const selectAll = () => setSelected(new Set(words.map((w) => w.id)));
-  const selectNone = () => setSelected(new Set());
-
-  // Words are already sorted newest-first by the API.
-  const selectLastN = (n: number) =>
-    setSelected(new Set(words.slice(0, n).map((w) => w.id)));
-
-  const selectRandomN = (n: number) => {
-    const shuffled = [...words];
-    for (let i = shuffled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  // Pressing the same quick-select control again clears the selection.
+  const applyAll = () => {
+    if (activeSelection === "all") {
+      clearSelection();
+      return;
     }
-    setSelected(new Set(shuffled.slice(0, n).map((w) => w.id)));
+    setSelected(new Set(words.map((w) => w.id)));
+    setActiveSelection("all");
   };
 
-  const selectRange = (range: TimeRange) => {
+  const rangeIds = (range: TimeRange) => {
     // Anchor to the start of today, then step back whole calendar days.
     const cutoff = new Date();
     cutoff.setHours(0, 0, 0, 0);
     cutoff.setDate(cutoff.getDate() - (RANGE_DAYS[range] - 1));
     const cutoffMs = cutoff.getTime();
-    setSelected(
-      new Set(
-        words.filter((w) => new Date(w.createdAt).getTime() >= cutoffMs).map((w) => w.id)
-      )
-    );
+    return words
+      .filter((w) => new Date(w.createdAt).getTime() >= cutoffMs)
+      .map((w) => w.id);
+  };
+
+  const applyRange = (range: TimeRange) => {
+    if (activeSelection === range) {
+      clearSelection();
+      return;
+    }
+    setSelected(new Set(rangeIds(range)));
+    setActiveSelection(range);
   };
 
   // ── Edit / delete ──────────────────────────────────────────────
@@ -176,6 +182,7 @@ export default function MyWordsPage() {
         deleted.forEach((id) => next.delete(id));
         return next;
       });
+      setActiveSelection(null);
       setConfirmDeleteSelected(false);
       if (deleted.size !== ids.length) setError("Some words could not be deleted");
     } catch {
@@ -195,7 +202,7 @@ export default function MyWordsPage() {
     selectedWords.map((w) => ({
       word: w.word,
       translation: w.translation,
-      status: "learning" as const,
+      status: "in_progress" as const,
     }));
 
   const dominantLangs = () => {
@@ -215,12 +222,14 @@ export default function MyWordsPage() {
       createdAt: new Date().toISOString(),
       cards: buildCards(),
     });
+    clearSelection();
   };
 
   const handleSaveDeck = () => {
     if (selectedWords.length === 0) return;
     setSaveLangs(dominantLangs());
     setSavingCards(buildCards());
+    clearSelection();
   };
 
   // ── Render: full-screen sub-flows ──────────────────────────────
@@ -281,29 +290,25 @@ export default function MyWordsPage() {
 
             <div className={styles.builderRow}>
               <span className={styles.builderLabel}>Pick</span>
-              <button className={styles.chip} onClick={selectAll}>All</button>
-              <button className={styles.chip} onClick={selectNone}>None</button>
-              <button className={styles.chip} onClick={() => selectLastN(count)}>Last {count}</button>
-              <button className={styles.chip} onClick={() => selectRandomN(count)}>Random {count}</button>
-              <span className={styles.countControl}>
-                N
-                <input
-                  className={styles.countInput}
-                  type="text"
-                  inputMode="numeric"
-                  value={countInput}
-                  onChange={(e) => setCountInput(e.target.value.replace(/\D/g, ""))}
-                  aria-label="Number of words"
-                />
-              </span>
+              <button
+                className={`${styles.chip} ${activeSelection === "all" ? styles.chipActive : ""}`}
+                onClick={applyAll}
+              >
+                All
+              </button>
             </div>
 
             <div className={styles.builderRow}>
               <span className={styles.builderLabel}>From last</span>
-              <button className={styles.chip} onClick={() => selectRange("day")}>Day</button>
-              <button className={styles.chip} onClick={() => selectRange("3days")}>3 days</button>
-              <button className={styles.chip} onClick={() => selectRange("week")}>Week</button>
-              <button className={styles.chip} onClick={() => selectRange("month")}>Month</button>
+              {(["day", "week", "month"] as const).map((r) => (
+                <button
+                  key={r}
+                  className={`${styles.chip} ${activeSelection === r ? styles.chipActive : ""}`}
+                  onClick={() => applyRange(r)}
+                >
+                  {r === "day" ? "Day" : r === "week" ? "Week" : "Month"}
+                </button>
+              ))}
             </div>
 
             <div className={styles.builderActions}>

@@ -13,15 +13,31 @@ const MAX_ROTATION = 10;
 const TAP_MAX_MOVEMENT = 8;
 const ZONE_TRIGGER_RATIO = 0.92;
 
+// The play queue = in-progress cards, starting at `fromIndex` (resume point).
+// If nothing remains from there, a fresh pass over ALL in-progress cards.
+function inProgressQueue(cards: PracticeCard[], fromIndex: number): number[] {
+  const fromHere = cards
+    .map((_, i) => i)
+    .filter((i) => cards[i].status === "in_progress" && i >= fromIndex);
+  if (fromHere.length > 0) return fromHere;
+  return cards.map((_, i) => i).filter((i) => cards[i].status === "in_progress");
+}
+
 export default function Flashcards({ deck, onDone }: Props) {
   const [cards, setCards] = useState<PracticeCard[]>(deck.cards);
-  const [index, setIndex] = useState(0);
+  const [queue, setQueue] = useState<number[]>(() => {
+    const resume = deck.resumeIndex ?? 0;
+    const start = resume >= deck.cards.length ? 0 : resume;
+    return inProgressQueue(deck.cards, start);
+  });
+  const [qpos, setQpos] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [finished, setFinished] = useState(false);
   const [skipTransition, setSkipTransition] = useState(false);
 
   // Drag state
   const [dragX, setDragX] = useState(0);
+  const [stageW, setStageW] = useState(0);
   const [dragging, setDragging] = useState(false);
   const [activeZone, setActiveZone] = useState<"known" | "learning" | null>(null);
   const [exitDirection, setExitDirection] = useState<"known" | "learning" | null>(null);
@@ -32,13 +48,11 @@ export default function Flashcards({ deck, onDone }: Props) {
   const sceneRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
 
-  const current = cards[index];
-
-  // Progress = cards swiped so far (regardless of direction)
-  const known = cards.filter((c) => c.status === "known").length;
-  const learning = cards.filter((c) => c.status === "learning").length;
-  const reviewed = index;
-  const progress = Math.round((reviewed / cards.length) * 100);
+  const learnt = cards.filter((c) => c.status === "learnt").length;
+  const inProgress = cards.filter((c) => c.status === "in_progress").length;
+  const showSummary = finished || queue.length === 0;
+  const current = cards[queue[qpos]];
+  const progress = queue.length ? Math.round((qpos / queue.length) * 100) : 0;
 
   // Lock page scroll during practice
   useEffect(() => {
@@ -47,7 +61,6 @@ export default function Flashcards({ deck, onDone }: Props) {
     return () => { document.body.style.overflow = prevOverflow; };
   }, []);
 
-  // Re-enable transition one frame after a card swap (prevents reverse-fly animation)
   useEffect(() => {
     if (skipTransition) {
       const id = requestAnimationFrame(() => setSkipTransition(false));
@@ -55,21 +68,29 @@ export default function Flashcards({ deck, onDone }: Props) {
     }
   }, [skipTransition]);
 
-  const persistStatus = (cardIndex: number, status: PracticeCard["status"]) => {
-    fetch(`/api/decks/${deck.id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ cardIndex, status }),
-    }).catch(() => { /* silently fail — local state already updated */ });
-  };
+  const patchDeck = useCallback(
+    (body: Record<string, unknown>) => {
+      if (!deck.id) return; // ephemeral "practice once" — nothing to persist
+      fetch(`/api/decks/${deck.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      }).catch(() => { /* local state already updated */ });
+    },
+    [deck.id]
+  );
 
   const commitSwipe = useCallback(
     (direction: "known" | "learning") => {
-      const cardIndex = index;
-      setCards((prev) =>
-        prev.map((c, i) => (i === cardIndex ? { ...c, status: direction } : c))
-      );
-      persistStatus(cardIndex, direction);
+      const qi = qpos;
+      const fullIdx = queue[qi];
+      const card = cards[fullIdx];
+      const newStatus = direction === "known" ? "learnt" : "in_progress";
+
+      setCards((prev) => prev.map((c, i) => (i === fullIdx ? { ...c, status: newStatus } : c)));
+      if (card?._id) patchDeck({ cardId: card._id, status: newStatus });
+      patchDeck({ resumeIndex: fullIdx + 1 });
+
       setExitDirection(direction);
       setActiveZone(null);
 
@@ -78,15 +99,36 @@ export default function Flashcards({ deck, onDone }: Props) {
         setSkipTransition(true);
         setExitDirection(null);
         setDragX(0);
-        if (cardIndex + 1 >= cards.length) {
+        if (qi + 1 >= queue.length) {
+          patchDeck({ resumeIndex: cards.length }); // pass complete
           setFinished(true);
         } else {
-          setIndex(cardIndex + 1);
+          setQpos(qi + 1);
         }
       }, 380);
     },
-    [index, cards.length, deck.id]
+    [qpos, queue, cards, patchDeck]
   );
+
+  const practiceAgain = () => {
+    setQueue(inProgressQueue(cards, 0));
+    setQpos(0);
+    setFinished(false);
+    setFlipped(false);
+    setDragX(0);
+    patchDeck({ resumeIndex: 0 });
+  };
+
+  const reviveAll = () => {
+    const revived = cards.map((c) => ({ ...c, status: "in_progress" as const }));
+    setCards(revived);
+    setQueue(revived.map((_, i) => i));
+    setQpos(0);
+    setFinished(false);
+    setFlipped(false);
+    setDragX(0);
+    patchDeck({ revive: true });
+  };
 
   // ── Pointer events ──────────────────────────────────────────
   const handlePointerDown = (e: React.PointerEvent) => {
@@ -94,6 +136,7 @@ export default function Flashcards({ deck, onDone }: Props) {
     pointerId.current = e.pointerId;
     startX.current = e.clientX;
     movedDistance.current = 0;
+    setStageW(stageRef.current?.clientWidth ?? window.innerWidth);
     setDragging(true);
     sceneRef.current?.setPointerCapture(e.pointerId);
   };
@@ -135,7 +178,7 @@ export default function Flashcards({ deck, onDone }: Props) {
 
   // ── Keyboard ────────────────────────────────────────────────
   useEffect(() => {
-    if (finished) return;
+    if (showSummary) return;
     const onKeyDown = (e: KeyboardEvent) => {
       if (exitDirection) return;
       if (e.key === "ArrowRight") { e.preventDefault(); commitSwipe("known"); }
@@ -144,34 +187,40 @@ export default function Flashcards({ deck, onDone }: Props) {
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [commitSwipe, exitDirection, finished]);
+  }, [commitSwipe, exitDirection, showSummary]);
 
-  // ── Finished screen ─────────────────────────────────────────
-  if (finished) {
+  // ── Summary screen (round complete / all learnt) ────────────
+  if (showSummary) {
+    const allLearnt = inProgress === 0;
     return (
       <div className={styles.finishedWrapper}>
         <div className={styles.finishedCard}>
-          <div className={styles.finishedEmoji}>🎉</div>
-          <h2 className={styles.finishedTitle}>Round complete!</h2>
+          <div className={styles.finishedEmoji}>{allLearnt ? "🏆" : "🎉"}</div>
+          <h2 className={styles.finishedTitle}>
+            {allLearnt ? "All words learnt!" : "Round complete!"}
+          </h2>
           <p className={styles.finishedDeckName}>{deck.name}</p>
           <div className={styles.finishedStats}>
             <div className={styles.statBox}>
-              <span className={styles.statNum} data-variant="known">{known}</span>
-              <span className={styles.statLabel}>Known</span>
+              <span className={styles.statNum} data-variant="known">{learnt}</span>
+              <span className={styles.statLabel}>Learnt</span>
             </div>
             <div className={styles.statDivider} />
             <div className={styles.statBox}>
-              <span className={styles.statNum} data-variant="learning">{learning}</span>
-              <span className={styles.statLabel}>Still learning</span>
+              <span className={styles.statNum} data-variant="learning">{inProgress}</span>
+              <span className={styles.statLabel}>In progress</span>
             </div>
           </div>
           <div className={styles.finishedActions}>
-            {learning > 0 && (
-              <button
-                className={styles.btnPrimary}
-                onClick={() => { setIndex(0); setFlipped(false); setFinished(false); }}
-              >
-                Practice again
+            {inProgress > 0 && (
+              <button className={styles.btnPrimary} onClick={practiceAgain}>
+                Continue practicing
+              </button>
+            )}
+            {/* Revive is only offered once every card has been learnt */}
+            {allLearnt && (
+              <button className={styles.btnPrimary} onClick={reviveAll}>
+                Revive all cards
               </button>
             )}
             <button className={styles.btnSecondary} onClick={onDone}>
@@ -184,8 +233,7 @@ export default function Flashcards({ deck, onDone }: Props) {
   }
 
   // ── Transform ───────────────────────────────────────────────
-  const stageWidth = stageRef.current?.clientWidth ?? 0;
-  const halfWidth = stageWidth / 2 || 1;
+  const halfWidth = stageW / 2 || 1;
   const dragRatio = Math.max(-1, Math.min(1, dragX / halfWidth));
   const flyDistance = (typeof window !== "undefined" ? window.innerWidth : 1200) + 200;
 
@@ -219,14 +267,14 @@ export default function Flashcards({ deck, onDone }: Props) {
         <div className={styles.header}>
           <div className={styles.deckMeta}>
             <span className={styles.deckName}>{deck.name}</span>
-            <span className={styles.cardCount}>{index + 1} / {cards.length}</span>
+            <span className={styles.cardCount}>{qpos + 1} / {queue.length}</span>
           </div>
           <div className={styles.progressTrack}>
             <div className={styles.progressFill} style={{ width: `${progress}%` }} />
           </div>
           <div className={styles.progressLabel}>
-            <span className={styles.knownLabel}>{known} known</span>
-            <span className={styles.learningLabel}>{learning} learning</span>
+            <span className={styles.knownLabel}>{learnt} learnt</span>
+            <span className={styles.learningLabel}>{inProgress} in progress</span>
           </div>
         </div>
 
@@ -246,8 +294,8 @@ export default function Flashcards({ deck, onDone }: Props) {
             tabIndex={0}
             aria-label={
               flipped
-                ? "Card showing translation. Tap to flip back. Drag to the side to mark."
-                : "Card showing word. Tap to flip. Drag to a side to mark."
+                ? "Card showing translation. Tap to flip back. Drag right = learnt, left = keep learning."
+                : "Card showing word. Tap to flip. Drag right = learnt, left = keep learning."
             }
           >
             <div className={styles.cardInner}>
@@ -259,19 +307,19 @@ export default function Flashcards({ deck, onDone }: Props) {
               <div className={`${styles.cardFace} ${styles.cardBack}`}>
                 <span className={styles.cardSideLabel}>translation</span>
                 <span className={styles.cardText}>{current.translation}</span>
-                <span className={styles.cardHint}>drag to a side</span>
+                <span className={styles.cardHint}>← keep · learnt →</span>
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* RIGHT — known */}
+      {/* RIGHT — learnt */}
       <div
         className={`${styles.sideZone} ${styles.zoneKnown} ${activeZone === "known" ? styles.zoneActive : ""}`}
         style={{ opacity: dragRatio > 0 ? Math.min(1, dragRatio / ZONE_TRIGGER_RATIO) * 0.5 + 0.5 : 0.18 }}
       >
-        <span className={styles.zoneLabel}>Known</span>
+        <span className={styles.zoneLabel}>Learnt</span>
       </div>
     </div>
   );

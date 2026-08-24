@@ -120,6 +120,17 @@
   background: var(--green-100);
 }
 
+.chipActive {
+  border-color: var(--green-500);
+  background: var(--green-500);
+  color: #fff;
+}
+
+.chipActive:hover {
+  background: var(--green-600);
+  color: #fff;
+}
+
 .countControl {
   display: inline-flex;
   align-items: center;

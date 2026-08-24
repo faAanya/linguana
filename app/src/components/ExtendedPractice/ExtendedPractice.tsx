@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { PracticeDeck, SentenceMode } from "@/app/src/models/domain";
 import styles from "./ExtendedPractice.module.css";
 
@@ -20,14 +20,36 @@ interface SentenceCard {
 
 type Stage = "setup" | "loading" | "practice" | "error";
 
+const MAX_ROTATION = 8;
+const TAP_MAX_MOVEMENT = 8;
+const SWIPE_TRIGGER_PX = 90; // minimum drag distance (any direction) to advance
+
 export default function ExtendedPractice({ deck, onDone }: Props) {
   const [stage, setStage] = useState<Stage>("setup");
   const [mode, setMode] = useState<SentenceMode>("native");
   const [cards, setCards] = useState<SentenceCard[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
+  const [finished, setFinished] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
+
+  // Swipe / flip animation state. The card can be dragged in any direction;
+  // on release past the threshold it tucks to the back of the stack.
+  const [dragX, setDragX] = useState(0);
+  const [dragY, setDragY] = useState(0);
+  const [stageW, setStageW] = useState(0);
+  const [dragging, setDragging] = useState(false);
+  const [exiting, setExiting] = useState(false);
+  const [exitTilt, setExitTilt] = useState(0);
+  const [skipTransition, setSkipTransition] = useState(false);
+
+  const startX = useRef(0);
+  const startY = useRef(0);
+  const pointerId = useRef<number | null>(null);
+  const movedDistance = useRef(0);
+  const stageRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<HTMLDivElement>(null);
 
   const shuffle = (arr: SentenceCard[]) => {
     for (let i = arr.length - 1; i > 0; i--) {
@@ -46,7 +68,6 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
       let all: SentenceCard[] = [];
 
       if (deck.id) {
-        // Saved deck: sentences are generated once and stored server-side.
         const res = await fetch(`/api/decks/${deck.id}/sentences`, { method: "POST" });
         if (!res.ok) {
           const data = await res.json();
@@ -62,7 +83,6 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
           translation: s.translation,
         }));
       } else {
-        // Ephemeral "practice once" deck: generate in-memory, not stored.
         const words = deck.cards.filter((c) => c.word.trim());
         for (let i = 0; i < words.length; i++) {
           const card = words[i];
@@ -103,16 +123,102 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
     }
   }, [deck.cards, deck.id]);
 
-  const next = () => {
+  // Re-enable transitions one frame after a card swap
+  useEffect(() => {
+    if (skipTransition) {
+      const id = requestAnimationFrame(() => setSkipTransition(false));
+      return () => cancelAnimationFrame(id);
+    }
+  }, [skipTransition]);
+
+  const commitSwipe = useCallback(() => {
+    const isLast = index + 1 >= cards.length;
+    setExitTilt(dragX >= 0 ? 4 : -4);
+    setExiting(true);
+    setTimeout(() => {
+      setExiting(false);
+      setDragX(0);
+      setDragY(0);
+      setSkipTransition(true);
+      setFlipped(false);
+      if (isLast) setFinished(true);
+      else setIndex((i) => i + 1);
+    }, 300);
+  }, [index, cards.length, dragX]);
+
+  const restart = () => {
+    setCards((prev) => shuffle([...prev]));
+    setIndex(0);
     setFlipped(false);
-    if (index + 1 >= cards.length) onDone();
-    else setIndex((i) => i + 1);
+    setFinished(false);
+    setDragX(0);
+    setDragY(0);
   };
 
-  // Strip any square brackets so they never render in the sentence text.
+  // ── Pointer events (drag in any direction to swipe, tap to flip) ──
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (exiting) return;
+    pointerId.current = e.pointerId;
+    startX.current = e.clientX;
+    startY.current = e.clientY;
+    movedDistance.current = 0;
+    setStageW(stageRef.current?.clientWidth ?? window.innerWidth);
+    setDragging(true);
+    sceneRef.current?.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragging || pointerId.current !== e.pointerId) return;
+    const stageWidth = stageRef.current?.clientWidth ?? window.innerWidth;
+    const stageHeight = stageRef.current?.clientHeight ?? 320;
+    const halfW = stageWidth / 2;
+    const halfH = stageHeight / 2;
+    const rawX = e.clientX - startX.current;
+    const rawY = e.clientY - startY.current;
+    const dx = Math.max(-halfW, Math.min(halfW, rawX));
+    const dy = Math.max(-halfH, Math.min(halfH, rawY));
+    movedDistance.current = Math.hypot(rawX, rawY);
+    setDragX(dx);
+    setDragY(dy);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (pointerId.current !== e.pointerId) return;
+    pointerId.current = null;
+    if (!dragging) return;
+    setDragging(false);
+
+    // Tap → flip
+    if (movedDistance.current <= TAP_MAX_MOVEMENT) {
+      setDragX(0);
+      setDragY(0);
+      setFlipped((f) => !f);
+      return;
+    }
+
+    // Swipe in any direction, if far enough → send to back of stack
+    if (Math.hypot(dragX, dragY) >= SWIPE_TRIGGER_PX) {
+      commitSwipe();
+    } else {
+      setDragX(0);
+      setDragY(0);
+    }
+  };
+
+  // ── Keyboard (only while practicing) ──
+  useEffect(() => {
+    if (stage !== "practice" || finished) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (exiting) return;
+      if (e.key === " ") { e.preventDefault(); setFlipped((f) => !f); }
+      else if (e.key.startsWith("Arrow")) { e.preventDefault(); commitSwipe(); }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [stage, finished, commitSwipe, exiting]);
+
   const stripBraces = (s: string) => s.replace(/[[\]]/g, "");
 
-  // Render the masked sentence with the native word highlighted (no brackets).
   const renderMasked = (masked: string) => {
     const parts = masked.split(/(\[[^\]]+\])/g);
     return parts.map((part, i) =>
@@ -124,7 +230,6 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
     );
   };
 
-  // Render the full sentence with the target word highlighted.
   const renderWithWord = (full: string, word: string) => {
     if (!word.trim()) return full;
     const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -138,7 +243,7 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
     );
   };
 
-  const ModeToggle = () => (
+  const modeToggle = (
     <div className={styles.modeToggle} role="tablist" aria-label="Sentence display mode">
       <button
         type="button"
@@ -168,13 +273,13 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
         <div className={styles.setupCard}>
           <h2 className={styles.setupTitle}>Extended practice</h2>
           <p className={styles.setupSubtitle}>
-            Each word gets one example sentence. Choose how it&rsquo;s shown — you can
-            switch modes any time during practice.
+            Each word gets one example sentence. Choose how it&rsquo;s shown, then
+            tap a card to reveal and swipe to move on.
           </p>
 
           <div className={styles.modeRow}>
             <span className={styles.countLabel}>Display mode</span>
-            <ModeToggle />
+            {modeToggle}
           </div>
 
           <p className={styles.modeHint}>
@@ -229,8 +334,38 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
     );
   }
 
+  // ── Finished ──
+  if (finished) {
+    return (
+      <div className={styles.centerWrap}>
+        <div className={styles.setupCard}>
+          <span className={styles.finishedEmoji}>🎉</span>
+          <h2 className={styles.setupTitle}>You got to the end!</h2>
+          <p className={styles.setupSubtitle}>
+            {cards.length} sentence{cards.length === 1 ? "" : "s"} practiced.
+          </p>
+          <div className={styles.setupActions}>
+            <button className={styles.btnSecondary} onClick={onDone}>Quit</button>
+            <button className={styles.btnPrimary} onClick={restart}>Try again</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Practice ──
   const current = cards[index];
+
+  const half = stageW / 2 || 1;
+  const dragRatio = Math.max(-1, Math.min(1, dragX / half));
+  const remaining = cards.length - index;
+
+  // Exit "to the back of the stack": the card shrinks to the deepest stack
+  // depth and (via a lowered z-index) drops behind the other cards — it
+  // doesn't fly off or fade, it tucks to the end of the deck.
+  const transform = exiting
+    ? `translateY(-20px) scale(0.88) rotate(${exitTilt}deg)`
+    : `translateX(${dragX}px) translateY(${dragY}px) rotate(${dragRatio * MAX_ROTATION}deg)`;
 
   return (
     <div className={styles.centerWrap}>
@@ -253,42 +388,50 @@ export default function ExtendedPractice({ deck, onDone }: Props) {
           <div className={styles.progressFill} style={{ width: `${(index / cards.length) * 100}%` }} />
         </div>
 
-        <div
-          className={`${styles.card} ${flipped ? styles.cardFlipped : ""}`}
-          onClick={() => setFlipped((f) => !f)}
-          role="button"
-          tabIndex={0}
-          aria-label="Tap to reveal"
-        >
-          <div className={styles.cardSentence}>
-            {mode === "native"
-              ? renderMasked(current.masked)
-              : renderWithWord(current.full, current.answer || current.word)}
-          </div>
+        <div className={styles.stage} ref={stageRef}>
+          {/* decorative cards behind, for the stack depth effect */}
+          {remaining > 2 && <div className={`${styles.stackBehind} ${styles.depth2}`} aria-hidden />}
+          {remaining > 1 && <div className={`${styles.stackBehind} ${styles.depth1}`} aria-hidden />}
 
-          {flipped ? (
-            <div className={styles.answerBlock}>
-              {/* reveal the counterpart of the word shown on the card front:
-                  native mode shows the native word → reveal the learning word;
-                  learning mode shows the learning word → reveal the native word */}
-              <span className={styles.answerWord}>
-                {mode === "native" ? current.answer || current.word : current.translation}
-              </span>
-              <span className={styles.answerFull}>
-                {current.fullTranslation || stripBraces(current.full)}
-              </span>
+          <div
+            ref={sceneRef}
+            className={`${styles.cardScene} ${flipped ? styles.flipped : ""} ${
+              dragging || skipTransition ? styles.draggingScene : styles.settlingScene
+            } ${skipTransition ? styles.noFlip : ""}`}
+            data-exiting={exiting ? "true" : "false"}
+            style={{ transform, zIndex: exiting ? 0 : 3 }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerUp}
+            role="button"
+            tabIndex={0}
+            aria-label="Tap to reveal, swipe for next"
+          >
+            <div className={styles.cardInner}>
+              {/* Front — the sentence */}
+              <div className={styles.cardFace}>
+                <span className={styles.faceLabel}>sentence</span>
+                <div className={styles.cardSentence}>
+                  {mode === "native"
+                    ? renderMasked(current.masked)
+                    : renderWithWord(current.full, current.answer || current.word)}
+                </div>
+                <span className={styles.tapHint}>tap to reveal · swipe for next</span>
+              </div>
+
+              {/* Back — the answer */}
+              <div className={`${styles.cardFace} ${styles.cardBack}`}>
+                <span className={styles.faceLabel}>answer</span>
+                <span className={styles.answerWord}>
+                  {mode === "native" ? current.answer || current.word : current.translation}
+                </span>
+                <span className={styles.answerFull}>
+                  {current.fullTranslation || stripBraces(current.full)}
+                </span>
+              </div>
             </div>
-          ) : (
-            <span className={styles.tapHint}>tap to reveal</span>
-          )}
-        </div>
-
-        <div className={styles.actions}>
-          {flipped && (
-            <button className={styles.btnPrimary} onClick={next}>
-              {index + 1 >= cards.length ? "Finish" : "Next →"}
-            </button>
-          )}
+          </div>
         </div>
       </div>
     </div>

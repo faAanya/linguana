@@ -5,7 +5,7 @@ import AppShell from "@/app/src/components/AppShell/AppShell";
 import OnboardingGate from "@/app/src/components/Onboarding/OnboardingGate";
 
 export const metadata: Metadata = {
-  title: "Linguana — AI Vocabulary Flashcards",
+  title: "StudyWally — AI Vocabulary Flashcards",
   description: "Learn languages faster with AI-generated flashcards",
 };
 

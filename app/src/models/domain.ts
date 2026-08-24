@@ -35,6 +35,10 @@ export interface UserDeck {
   description?: string;
   sourceLanguage: string;
   targetLanguage: string;
+  pinned?: boolean;
+  // Where General practice should resume: an index into the deck's ordered
+  // cards. Reaches cardCount when a pass is complete (next pass starts over).
+  resumeIndex?: number;
   copiedFromTemplateId?: ObjectId;        // set when created from a DeckTemplate
   createdAt: Date;
   updatedAt: Date;
@@ -50,13 +54,22 @@ export interface ExampleSentence {
   fullTranslation: string; // the whole sentence translated into the native language ("Я вчера купил яблоко.")
 }
 
+// Progress of a single flashcard. New cards start "in_progress"; a card the
+// user marks as known during practice becomes "learnt".
+export type CardStatus = "in_progress" | "learnt";
+
 // ── Flashcard (card inside a UserDeck) ───────────────────────
+// Words are embedded directly on the card and belong to this deck only —
+// they are NOT shared with other decks or with the "My words" collection, so
+// the same word can appear independently in many decks.
 export interface Flashcard {
   _id?: ObjectId;
   userDeckId: ObjectId;
-  wordId: ObjectId;                       // reference to global Word
-  customTranslation?: string;             // user override, doesn't touch Word
-  status: "new" | "learning" | "known";
+  userId: ObjectId;
+  word: string;                           // the term being learned
+  translation: string;                    // its translation
+  order: number;                          // position within the deck
+  status: CardStatus;
   exampleSentence?: ExampleSentence;      // generated lazily, then reused
   createdAt: Date;
   updatedAt: Date;
@@ -79,14 +92,12 @@ export interface UserWord {
 }
 
 // ── SavedWord (personal vocabulary collection) ────────────────
-// A word the user saved from the "Add words" (Google-Translate-style)
-// screen. Denormalized (word + translation stored inline) so the
-// "My words" list renders without a join. Still linked to the global
-// Word via wordId so translations feed the shared dictionary.
+// A word the user saved from the "Add words" screen. Fully self-contained
+// and completely independent of flashcards/decks — "My words" is its own
+// collection and shares nothing with practice content.
 export interface SavedWord {
   _id?: ObjectId;
   userId: ObjectId;
-  wordId: ObjectId;                       // reference to global Word
   word: string;                           // source text, e.g. "hello"
   translation: string;                    // chosen translation, e.g. "hola"
   sourceLanguage: string;                 // ISO 639-1 of `word`
@@ -147,7 +158,7 @@ export interface PracticeCard {
   _id?: string;
   word: string;
   translation: string;
-  status: "new" | "learning" | "known";
+  status: CardStatus;
 }
 
 export interface PracticeDeck {
@@ -155,4 +166,5 @@ export interface PracticeDeck {
   name: string;
   createdAt: string;
   cards: PracticeCard[];
+  resumeIndex?: number;      // General practice resume position
 }

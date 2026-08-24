@@ -43,7 +43,7 @@ export default function Onboarding({ onComplete }: Props) {
       <div className={styles.modal}>
         <div className={styles.header}>
           <span className={styles.emoji}>🦎</span>
-          <h2 className={styles.title}>Welcome to Linguana!</h2>
+          <h2 className={styles.title}>Welcome to StudyWally!</h2>
           <p className={styles.subtitle}>
             Tell us which languages you speak and which you want to learn, so we
             can tailor your flashcards and translations.

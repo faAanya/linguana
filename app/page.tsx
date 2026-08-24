@@ -15,7 +15,7 @@ export default function HomePage() {
       <div className={styles.hero}>
         <span className={styles.badge}>Welcome</span>
         <h1 className={styles.title}>
-          {user ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to Linguana"}
+          {user ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to StudyWally"}
         </h1>
         <p className={styles.subtitle}>
           Build your own vocabulary, turn it into flashcards, and practice the
@@ -28,7 +28,7 @@ export default function HomePage() {
         {user ? (
           <div className={styles.actions}>
             <Link href="/add-words" className={styles.btnPrimary}>＋ Add words</Link>
-            <Link href="/import" className={styles.btnSecondary}>Create decks</Link>
+            <Link href="/decks" className={styles.btnSecondary}>Decks</Link>
           </div>
         ) : (
           <div className={styles.actions}>

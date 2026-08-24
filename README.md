@@ -1,4 +1,4 @@
-# LinguaFlash — local JSON storage version
+# StudyWally — local JSON storage version
 
 ## Setup
 

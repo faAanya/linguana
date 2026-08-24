@@ -12,6 +12,15 @@ interface DeckSummary {
   name: string;
   createdAt: string;
   cardCount: number;
+  pinned: boolean;
+}
+
+// Pinned decks first, then newest first.
+function sortDecks(arr: DeckSummary[]): DeckSummary[] {
+  return [...arr].sort((a, b) => {
+    if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
 }
 
 export default function DecksPage() {
@@ -32,10 +41,32 @@ export default function DecksPage() {
     setFetching(true);
     fetch("/api/decks")
       .then((r) => r.json())
-      .then((data) => setDecks(Array.isArray(data) ? data : []))
+      .then((data) => setDecks(sortDecks(Array.isArray(data) ? data : [])))
       .catch(() => setError("Failed to load decks"))
       .finally(() => setFetching(false));
   }, []);
+
+  const handleTogglePin = async (deck: DeckSummary) => {
+    const nextPinned = !deck.pinned;
+    // Optimistic update + reorder
+    setDecks((prev) =>
+      sortDecks(prev.map((d) => (d.id === deck.id ? { ...d, pinned: nextPinned } : d)))
+    );
+    try {
+      const res = await fetch(`/api/decks/${deck.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ pinned: nextPinned }),
+      });
+      if (!res.ok) throw new Error();
+    } catch {
+      // Revert on failure
+      setDecks((prev) =>
+        sortDecks(prev.map((d) => (d.id === deck.id ? { ...d, pinned: deck.pinned } : d)))
+      );
+      setError("Failed to update pin");
+    }
+  };
 
   useEffect(() => {
     if (loading) return;
@@ -126,7 +157,16 @@ export default function DecksPage() {
               >
                 <div className={styles.cardTop}>
                   <span className={styles.cardName}>{deck.name}</span>
-                  <span className={styles.cardCount}>{deck.cardCount} cards</span>
+                  <span className={styles.cardMeta}>
+                    {deck.pinned && (
+                      <span className={styles.pinnedMark} aria-hidden title="Pinned">
+                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
+                          <path d="M5.5 2h5M6 2l.5 4.5-2 2h7l-2-2L10 2M8 8.5V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                      </span>
+                    )}
+                    <span className={styles.cardCount}>{deck.cardCount} cards</span>
+                  </span>
                 </div>
                 <span className={styles.cardDate}>
                   {launching === deck.id
@@ -141,6 +181,18 @@ export default function DecksPage() {
               </button>
 
               <div className={styles.cardActions}>
+                <button
+                  className={`${styles.pinBtn} ${deck.pinned ? styles.pinBtnActive : ""}`}
+                  onClick={() => handleTogglePin(deck)}
+                  title={deck.pinned ? "Unpin deck" : "Pin deck"}
+                  aria-label={deck.pinned ? "Unpin deck" : "Pin deck"}
+                  aria-pressed={deck.pinned}
+                >
+                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
+                    <path d="M5.5 2h5M6 2l.5 4.5-2 2h7l-2-2L10 2M8 8.5V14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+
                 <button
                   className={styles.editBtn}
                   onClick={() => router.push(`/decks/${deck.id}`)}

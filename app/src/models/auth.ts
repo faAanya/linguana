@@ -11,7 +11,6 @@ export interface User {
   updatedAt: Date;
 }
  
-// Verification code record (new collection)
 export interface VerificationCode {
   _id?: ObjectId;
   email: string;
