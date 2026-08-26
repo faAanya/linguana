@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   height: 56px;
-  background: rgba(255, 255, 255, 0.85);
+  background: var(--bg-bar);
   backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--gray-200);
   display: flex;
@@ -19,6 +19,13 @@
   align-items: center;
   gap: 0.875rem;
   min-width: 0;
+}
+
+.right {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  flex-shrink: 0;
 }
 
 .logo {

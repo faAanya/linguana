@@ -39,6 +39,49 @@
   --bg-hero: #f3f4ff;
   --bg-card: #ffffff;
   --border-card: #e5e7eb;
+  --bg-bar: rgba(255, 255, 255, 0.85);
+
+  color-scheme: light;
+}
+
+/* ── Dark theme ──────────────────────────────────────────────
+   Only the tokens that need to change are overridden; brand hues
+   mostly carry over, with a few brightened for contrast on dark. */
+:root[data-theme="dark"] {
+  --white: #20242c;      /* now a dark surface (used as input/chip bg) */
+  --gray-50: #1b1f27;
+  --gray-100: #242a34;
+  --gray-200: #323a47;
+  --gray-400: #8790a0;
+  --gray-700: #c9cfd8;
+  --gray-900: #f2f4f6;
+
+  --text-primary: #f1f3f5;
+  --text-secondary: #c4cad3;
+  --text-muted: #8790a0;
+
+  --bg-page: #0f1216;
+  --bg-hero: #171b22;
+  --bg-card: #1a1e26;
+  --border-card: #2b313d;
+  --bg-bar: rgba(16, 19, 25, 0.85);
+
+  /* tinted badge / chip backgrounds, darkened */
+  --green-100: #14311f;
+  --lime-100: #24300f;
+  --sky-100: #10293a;
+  --indigo-100: #232551;
+  --amber-100: #372e13;
+  --red-100: #391a1d;
+
+  /* brightened for legibility on dark surfaces */
+  --green-600: #34d058;
+  --green-700: #86efac;
+  --indigo-600: #a5b4fc;
+  --indigo-700: #c7cdff;
+  --teal-500: #2dd4bf;
+
+  color-scheme: dark;
 }
 
 *,

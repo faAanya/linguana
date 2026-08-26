@@ -11,8 +11,17 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body suppressHydrationWarning>
+        {/* Apply the saved (or system) theme before paint to avoid a flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');" +
+              "if(t!=='dark'&&t!=='light'){t=window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light';}" +
+              "document.documentElement.setAttribute('data-theme',t);}catch(e){}})();",
+          }}
+        />
         <AuthProvider>
           <OnboardingGate>
             <AppShell>{children}</AppShell>

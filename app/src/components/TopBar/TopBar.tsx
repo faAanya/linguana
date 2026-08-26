@@ -5,6 +5,7 @@ import Link from "next/link";
 import ProfileButton from "@/app/src/components/ProfileButton/ProfileButton";
 import AuthModal from "@/app/src/components/Auth/AuthModal";
 import NavSections from "@/app/src/components/Nav/NavSections";
+import ThemeToggle from "@/app/src/components/ThemeToggle/ThemeToggle";
 import styles from "./TopBar.module.css";
 
 interface Props {
@@ -35,7 +36,10 @@ export default function TopBar({ showNav = true }: Props) {
           <Link href="/" className={styles.logo}>StudyWally</Link>
         </div>
 
-        <ProfileButton onLoginClick={() => setShowAuth(true)} />
+        <div className={styles.right}>
+          <ThemeToggle />
+          <ProfileButton onLoginClick={() => setShowAuth(true)} />
+        </div>
       </header>
 
       {/* Mobile drawer — shows the sidebar sections */}
