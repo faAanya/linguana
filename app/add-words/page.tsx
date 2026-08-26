@@ -62,7 +62,7 @@ export default function AddWordsPage() {
 
   const [word, setWord] = useState("");
   const [candidates, setCandidates] = useState<string[]>([]);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [selected, setSelected] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -79,7 +79,7 @@ export default function AddWordsPage() {
 
       if (sourceLang === targetLang) {
         setCandidates([trimmed]);
-        setSelected(new Set([trimmed]));
+        setSelected(trimmed);
         translatedFor.current = trimmed;
         return;
       }
@@ -100,7 +100,7 @@ export default function AddWordsPage() {
         const list: string[] = Array.isArray(opts) ? opts : [];
         setCandidates(list);
         // Pre-select the most common translation
-        setSelected(new Set(list.slice(0, 1)));
+        setSelected(list[0] ?? null);
         translatedFor.current = trimmed;
       } catch (err) {
         setError(err instanceof Error ? err.message : "Translation failed");
@@ -125,7 +125,7 @@ export default function AddWordsPage() {
     persist(LS_SOURCE, code);
     translatedFor.current = "";
     setCandidates([]);
-    setSelected(new Set());
+    setSelected(null);
   };
 
   const changeTarget = (code: string) => {
@@ -133,7 +133,7 @@ export default function AddWordsPage() {
     persist(LS_TARGET, code);
     translatedFor.current = "";
     setCandidates([]);
-    setSelected(new Set());
+    setSelected(null);
   };
 
   const swap = () => {
@@ -141,58 +141,43 @@ export default function AddWordsPage() {
     setTargetOverride(sourceLang);
     persist(LS_SOURCE, targetLang);
     persist(LS_TARGET, sourceLang);
-    setWord([...selected][0] ?? candidates[0] ?? "");
+    setWord(selected ?? candidates[0] ?? "");
     setCandidates([]);
-    setSelected(new Set());
+    setSelected(null);
     translatedFor.current = "";
   };
 
-  const toggleOption = (opt: string) => {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(opt)) next.delete(opt);
-      else next.add(opt);
-      return next;
-    });
+  // Only one translation can be chosen at a time (click again to deselect).
+  const selectOption = (opt: string) => {
+    setSelected((prev) => (prev === opt ? null : opt));
   };
 
   const handleSave = async () => {
-    const picks = [...selected];
-    if (!word.trim() || picks.length === 0) return;
+    if (!word.trim() || !selected) return;
     if (!user) { setShowAuth(true); return; }
 
     setSaving(true);
     setError(null);
     try {
-      const results = await Promise.all(
-        picks.map((tr) =>
-          fetch("/api/words", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ word: word.trim(), translation: tr, sourceLang, targetLang }),
-          }).then(async (r) => {
-            if (!r.ok) throw new Error((await r.json()).error ?? "Failed to save");
-            return r.json();
-          })
-        )
-      );
-
-      setRecent((prev) => {
-        const merged = [
-          ...results.map((s) => ({
-            id: s.id,
-            word: s.word,
-            translation: s.translation,
-            targetLanguage: s.targetLanguage,
-          })),
-          ...prev,
-        ];
-        return merged.filter((v, i, arr) => arr.findIndex((x) => x.id === v.id) === i);
+      const res = await fetch("/api/words", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ word: word.trim(), translation: selected, sourceLang, targetLang }),
       });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Failed to save");
+      }
+      const s = await res.json();
+
+      setRecent((prev) => [
+        { id: s.id, word: s.word, translation: s.translation, targetLanguage: s.targetLanguage },
+        ...prev.filter((r) => r.id !== s.id),
+      ]);
 
       setWord("");
       setCandidates([]);
-      setSelected(new Set());
+      setSelected(null);
       translatedFor.current = "";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
@@ -201,7 +186,7 @@ export default function AddWordsPage() {
     }
   };
 
-  const canSave = !!word.trim() && selected.size > 0 && !saving;
+  const canSave = !!word.trim() && !!selected && !saving;
 
   return (
     <>
@@ -265,7 +250,7 @@ export default function AddWordsPage() {
                 {LANGUAGE_MAP[targetLang]?.name ?? targetLang}
                 {translating && <span className={styles.translatingDot}>· translating…</span>}
                 {!translating && candidates.length > 0 && (
-                  <span className={styles.pickHint}>· tap to pick</span>
+                  <span className={styles.pickHint}>· pick one</span>
                 )}
               </label>
               <div className={styles.optionsBox}>
@@ -279,9 +264,9 @@ export default function AddWordsPage() {
                       <button
                         key={opt}
                         type="button"
-                        className={`${styles.optionChip} ${selected.has(opt) ? styles.optionChipSelected : ""}`}
-                        onClick={() => toggleOption(opt)}
-                        aria-pressed={selected.has(opt)}
+                        className={`${styles.optionChip} ${selected === opt ? styles.optionChipSelected : ""}`}
+                        onClick={() => selectOption(opt)}
+                        aria-pressed={selected === opt}
                       >
                         {opt}
                       </button>
@@ -303,9 +288,7 @@ export default function AddWordsPage() {
               {translating ? "Translating…" : "Translate"}
             </button>
             <button className={styles.btnPrimary} onClick={handleSave} disabled={!canSave}>
-              {saving
-                ? "Saving…"
-                : `＋ Save${selected.size > 1 ? ` ${selected.size} words` : " word"}`}
+              {saving ? "Saving…" : "＋ Save word"}
             </button>
           </div>
         </div>
