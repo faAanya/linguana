@@ -93,3 +93,11 @@ export async function refreshSession(): Promise<AuthTokenPayload | null> {
 export function toPublicUser(payload: AuthTokenPayload): PublicUser {
   return { id: payload.userId, email: payload.email, name: payload.name };
 }
+
+// The session used by protected API routes: the access token, falling back to
+// a refresh if it has expired. Returns null when neither is valid.
+export async function requireUser(): Promise<AuthTokenPayload | null> {
+  const session = await getSessionUser();
+  if (session) return session;
+  return refreshSession();
+}

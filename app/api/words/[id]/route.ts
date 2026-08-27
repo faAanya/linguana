@@ -1,13 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/app/src/lib/mongodb";
-import { getSessionUser, refreshSession } from "@/app/src/lib/jwt";
-
-async function requireUser() {
-  let session = await getSessionUser();
-  if (!session) session = await refreshSession();
-  return session;
-}
+import { requireUser } from "@/app/src/lib/jwt";
 
 // PATCH /api/words/[id] — edit a saved word's text/translation.
 // Body: { word?, translation? }

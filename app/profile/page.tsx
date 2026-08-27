@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/src/components/Auth/AuthContext";
 import LanguagePicker from "@/app/src/components/LanguagePicker/LanguagePicker";
+import Spinner from "@/app/src/components/common/Spinner/Spinner";
 import styles from "./page.module.css";
 
 export default function ProfilePage() {
@@ -61,7 +62,7 @@ export default function ProfilePage() {
   if (loading || fetching) {
     return (
       <main className={styles.main}>
-        <div className={styles.spinner} />
+        <Spinner />
       </main>
     );
   }

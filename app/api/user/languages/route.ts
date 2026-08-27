@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/app/src/lib/mongodb";
-import { getSessionUser, refreshSession } from "@/app/src/lib/jwt";
+import { requireUser } from "@/app/src/lib/jwt";
 import { LANGUAGE_MAP } from "@/app/src/models/languages";
-
-async function requireUser() {
-  let session = await getSessionUser();
-  if (!session) session = await refreshSession();
-  return session;
-}
 
 // Validate that every code is in our curated list
 function validCodes(codes: unknown): codes is string[] {

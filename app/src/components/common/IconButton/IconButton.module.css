@@ -1,0 +1,33 @@
+.btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s;
+}
+
+.default:hover {
+  background: var(--indigo-100);
+  color: var(--indigo-600);
+}
+
+.danger:hover {
+  background: var(--red-100);
+  color: var(--red-500);
+}
+
+.pin:hover {
+  background: var(--green-100);
+  color: var(--green-600);
+}
+
+.pin.active {
+  background: var(--green-100);
+  color: var(--green-600);
+}

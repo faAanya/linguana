@@ -7,6 +7,7 @@ import Flashcards from "@/app/src/components/FlashCards/FlashCards";
 import AuthModal from "@/app/src/components/Auth/AuthModal";
 import { useAuth } from "@/app/src/components/Auth/AuthContext";
 import { PracticeCard, PracticeDeck } from "@/app/src/models/domain";
+import Spinner from "@/app/src/components/common/Spinner/Spinner";
 import styles from "./page.module.css";
 
 type Step = "upload" | "save" | "practice";
@@ -65,7 +66,7 @@ export default function ImportPage() {
   if (loading) {
     return (
       <main className={styles.main}>
-        <div className={styles.loadingSpinner} />
+        <Spinner />
       </main>
     );
   }

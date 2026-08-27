@@ -4,6 +4,10 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/src/components/Auth/AuthContext";
 import PracticeLauncher from "@/app/src/components/ExtendedPractice/PracticeLauncher";
+import Spinner from "@/app/src/components/common/Spinner/Spinner";
+import IconButton from "@/app/src/components/common/IconButton/IconButton";
+import ConfirmInline from "@/app/src/components/common/ConfirmInline/ConfirmInline";
+import { EditIcon, TrashIcon, PinIcon } from "@/app/src/components/common/icons/icons";
 import { PracticeDeck } from "@/app/src/models/domain";
 import styles from "./page.module.css";
 
@@ -74,6 +78,7 @@ export default function DecksPage() {
       router.replace("/");
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time load on mount
     loadDecks();
   }, [user, loading, router, loadDecks]);
 
@@ -119,7 +124,7 @@ export default function DecksPage() {
   if (loading || fetching) {
     return (
       <main className={styles.main}>
-        <div className={styles.spinner} />
+        <Spinner />
       </main>
     );
   }
@@ -160,9 +165,7 @@ export default function DecksPage() {
                   <span className={styles.cardMeta}>
                     {deck.pinned && (
                       <span className={styles.pinnedMark} aria-hidden title="Pinned">
-                        <svg width="13" height="13" viewBox="0 0 16 16" fill="none">
-                          <path d="M5.5 2h5M6 2l.5 4.5-2 2h7l-2-2L10 2M8 8.5V14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
+                        <PinIcon size={13} />
                       </span>
                     )}
                     <span className={styles.cardCount}>{deck.cardCount} cards</span>
@@ -181,49 +184,40 @@ export default function DecksPage() {
               </button>
 
               <div className={styles.cardActions}>
-                <button
-                  className={`${styles.pinBtn} ${deck.pinned ? styles.pinBtnActive : ""}`}
+                <IconButton
+                  variant="pin"
+                  active={deck.pinned}
+                  className={styles.pinLeft}
                   onClick={() => handleTogglePin(deck)}
                   title={deck.pinned ? "Unpin deck" : "Pin deck"}
                   aria-label={deck.pinned ? "Unpin deck" : "Pin deck"}
                   aria-pressed={deck.pinned}
                 >
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                    <path d="M5.5 2h5M6 2l.5 4.5-2 2h7l-2-2L10 2M8 8.5V14" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+                  <PinIcon />
+                </IconButton>
 
-                <button
-                  className={styles.editBtn}
+                <IconButton
                   onClick={() => router.push(`/decks/${deck.id}`)}
                   title="Edit deck"
                   aria-label="Edit deck"
                 >
-                  <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                    <path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+                  <EditIcon />
+                </IconButton>
 
                 {deletingId === deck.id ? (
-                  <div className={styles.confirmDelete}>
-                    <button className={styles.confirmYes} onClick={() => handleDelete(deck.id)}>
-                      Delete
-                    </button>
-                    <button className={styles.confirmNo} onClick={() => setDeletingId(null)}>
-                      Cancel
-                    </button>
-                  </div>
+                  <ConfirmInline
+                    onConfirm={() => handleDelete(deck.id)}
+                    onCancel={() => setDeletingId(null)}
+                  />
                 ) : (
-                  <button
-                    className={styles.deleteBtn}
+                  <IconButton
+                    variant="danger"
                     onClick={() => setDeletingId(deck.id)}
                     title="Delete deck"
                     aria-label="Delete deck"
                   >
-                    <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                      <path d="M3 4h10M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1M5 4l.5 9a1 1 0 001 1h3a1 1 0 001-1L11 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                    </svg>
-                  </button>
+                    <TrashIcon />
+                  </IconButton>
                 )}
               </div>
             </div>

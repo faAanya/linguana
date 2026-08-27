@@ -22,8 +22,8 @@ async function createCollectionSafe(
 ) {
   try {
     await db.createCollection(name, options);
-  } catch (err: any) {
-    if (err.code === 48) {
+  } catch (err) {
+    if ((err as { code?: number }).code === 48) {
       console.log(`  ↩ ${name} already exists, skipping`);
     } else {
       throw err;
@@ -45,9 +45,10 @@ async function ensureValidator(
     await db.command({ collMod: name, validator, validationLevel: "moderate" });
     console.log(`  ↻ ${name} validator updated (collMod)`);
     return;
-  } catch (err: any) {
-    if (err.codeName === "NamespaceNotFound") return; // just created with validator
-    console.warn(`  ! collMod on ${name} denied: ${err.message}`);
+  } catch (err) {
+    const e = err as { codeName?: string; message?: string };
+    if (e.codeName === "NamespaceNotFound") return; // just created with validator
+    console.warn(`  ! collMod on ${name} denied: ${e.message}`);
   }
 
   if (process.env.ALLOW_RECREATE !== "1") {
@@ -71,8 +72,8 @@ async function ensureValidator(
     try {
       await db.collection(name).insertMany(backup, { ordered: false });
       console.log(`    restored ${backup.length} ${name} docs`);
-    } catch (e: any) {
-      console.warn(`    some ${name} docs were not restored: ${e.message}`);
+    } catch (e) {
+      console.warn(`    some ${name} docs were not restored: ${(e as { message?: string }).message}`);
     }
   }
 }

@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser, refreshSession } from "@/app/src/lib/jwt";
+import { requireUser } from "@/app/src/lib/jwt";
 import { translateOptions } from "@/app/src/lib/translation";
-
-async function requireUser() {
-  let session = await getSessionUser();
-  if (!session) session = await refreshSession();
-  return session;
-}
 
 // POST /api/translate/options
 // Body: { text, sourceLang, targetLang }

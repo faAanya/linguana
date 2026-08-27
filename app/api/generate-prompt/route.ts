@@ -1,12 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import OpenAI from "openai";
-import { getSessionUser, refreshSession } from "@/app/src/lib/jwt";
-
-async function requireUser() {
-  let session = await getSessionUser();
-  if (!session) session = await refreshSession();
-  return session;
-}
+import { requireUser } from "@/app/src/lib/jwt";
 
 let openai: OpenAI | null = null;
 function getOpenAIClient(): OpenAI {

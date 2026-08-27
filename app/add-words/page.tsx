@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useAuth } from "@/app/src/components/Auth/AuthContext";
 import AuthModal from "@/app/src/components/Auth/AuthModal";
 import { LANGUAGES, LANGUAGE_MAP } from "@/app/src/models/languages";
+import Button from "@/app/src/components/common/Button/Button";
 import styles from "./page.module.css";
 
 interface RecentWord {
@@ -40,10 +41,10 @@ export default function AddWordsPage() {
     try {
       const s = localStorage.getItem(LS_SOURCE);
       const t = localStorage.getItem(LS_TARGET);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+      /* eslint-disable react-hooks/set-state-in-effect -- one-time read of a saved preference */
       if (s && s in LANGUAGE_MAP) setSourceOverride(s);
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (t && t in LANGUAGE_MAP) setTargetOverride(t);
+      /* eslint-enable react-hooks/set-state-in-effect */
     } catch {
       /* localStorage unavailable — fall back to defaults */
     }
@@ -280,16 +281,16 @@ export default function AddWordsPage() {
           {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.actions}>
-            <button
-              className={styles.btnSecondary}
+            <Button
+              variant="secondary"
               onClick={() => runTranslate(word)}
               disabled={!word.trim() || translating}
             >
               {translating ? "Translating…" : "Translate"}
-            </button>
-            <button className={styles.btnPrimary} onClick={handleSave} disabled={!canSave}>
+            </Button>
+            <Button variant="primary" onClick={handleSave} disabled={!canSave}>
               {saving ? "Saving…" : "＋ Save word"}
-            </button>
+            </Button>
           </div>
         </div>
 

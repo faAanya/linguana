@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { useAuth } from "@/app/src/components/Auth/AuthContext";
+import Spinner from "@/app/src/components/common/Spinner/Spinner";
 import styles from "./page.module.css";
 
 interface EditCard {
@@ -105,7 +106,7 @@ export default function EditDeckPage() {
   if (loading || fetching) {
     return (
       <main className={styles.main}>
-        <div className={styles.spinner} />
+        <Spinner />
       </main>
     );
   }

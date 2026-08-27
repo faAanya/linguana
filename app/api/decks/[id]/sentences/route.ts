@@ -1,14 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { ObjectId } from "mongodb";
 import { getDb } from "@/app/src/lib/mongodb";
-import { getSessionUser, refreshSession } from "@/app/src/lib/jwt";
+import { requireUser } from "@/app/src/lib/jwt";
 import { generateSentence } from "@/app/src/lib/sentences";
-
-async function requireUser() {
-  let session = await getSessionUser();
-  if (!session) session = await refreshSession();
-  return session;
-}
 
 // POST /api/decks/[id]/sentences
 // Ensures every flashcard in the deck has a stored example sentence,

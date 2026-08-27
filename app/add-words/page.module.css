@@ -222,43 +222,6 @@
   gap: 0.625rem;
 }
 
-.btnPrimary,
-.btnSecondary {
-  padding: 0.6rem 1.15rem;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 0.9rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
-}
-
-.btnPrimary {
-  border: none;
-  background: var(--green-600);
-  color: #fff;
-}
-
-.btnPrimary:hover:not(:disabled) {
-  background: var(--green-700);
-}
-
-.btnSecondary {
-  border: 1px solid var(--border-card);
-  background: var(--white);
-  color: var(--text-secondary);
-}
-
-.btnSecondary:hover:not(:disabled) {
-  border-color: var(--gray-400);
-}
-
-.btnPrimary:disabled,
-.btnSecondary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
 /* ── Recently added ── */
 .recent {
   width: 100%;

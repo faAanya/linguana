@@ -54,6 +54,7 @@ export default function ImageUploader({ onConfirmed }: Props) {
 
   useEffect(() => {
     if (!targetLang && user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- default target language once user loads
       setTargetLang(user.nativeLanguages?.[0] ?? user.learningLanguages?.[0] ?? "en");
     }
   }, [user, targetLang]);

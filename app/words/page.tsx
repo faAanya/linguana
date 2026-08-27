@@ -7,6 +7,11 @@ import { LANGUAGE_MAP } from "@/app/src/models/languages";
 import { PracticeCard, PracticeDeck } from "@/app/src/models/domain";
 import PracticeLauncher from "@/app/src/components/ExtendedPractice/PracticeLauncher";
 import SaveDeck from "@/app/src/components/SaveDeck/SaveDeck";
+import Spinner from "@/app/src/components/common/Spinner/Spinner";
+import Button from "@/app/src/components/common/Button/Button";
+import IconButton from "@/app/src/components/common/IconButton/IconButton";
+import ConfirmInline from "@/app/src/components/common/ConfirmInline/ConfirmInline";
+import { EditIcon, TrashIcon } from "@/app/src/components/common/icons/icons";
 import styles from "./page.module.css";
 
 interface WordItem {
@@ -71,6 +76,7 @@ export default function MyWordsPage() {
       router.replace("/");
       return;
     }
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time load on mount
     loadWords();
   }, [user, loading, router, loadWords]);
 
@@ -255,7 +261,7 @@ export default function MyWordsPage() {
   if (loading || fetching) {
     return (
       <main className={styles.main}>
-        <div className={styles.spinner} />
+        <Spinner />
       </main>
     );
   }
@@ -319,44 +325,32 @@ export default function MyWordsPage() {
                   <span className={styles.confirmText}>
                     Delete {selectedCount} word{selectedCount === 1 ? "" : "s"}?
                   </span>
-                  <button
-                    className={styles.btnDanger}
-                    onClick={handleDeleteSelected}
-                    disabled={deletingSelected}
-                  >
+                  <Button variant="danger" onClick={handleDeleteSelected} disabled={deletingSelected}>
                     {deletingSelected ? "Deleting…" : "Delete"}
-                  </button>
-                  <button
-                    className={styles.btnSecondary}
+                  </Button>
+                  <Button
+                    variant="secondary"
                     onClick={() => setConfirmDeleteSelected(false)}
                     disabled={deletingSelected}
                   >
                     Cancel
-                  </button>
+                  </Button>
                 </>
               ) : (
                 <>
-                  <button
-                    className={styles.btnDangerGhost}
+                  <Button
+                    variant="dangerGhost"
                     onClick={() => setConfirmDeleteSelected(true)}
                     disabled={selectedCount === 0}
                   >
                     Delete selected
-                  </button>
-                  <button
-                    className={styles.btnSecondary}
-                    onClick={handlePracticeOnce}
-                    disabled={selectedCount === 0}
-                  >
+                  </Button>
+                  <Button variant="secondary" onClick={handlePracticeOnce} disabled={selectedCount === 0}>
                     ▶ Practice once
-                  </button>
-                  <button
-                    className={styles.btnPrimary}
-                    onClick={handleSaveDeck}
-                    disabled={selectedCount === 0}
-                  >
+                  </Button>
+                  <Button variant="primary" onClick={handleSaveDeck} disabled={selectedCount === 0}>
                     Save as deck
-                  </button>
+                  </Button>
                 </>
               )}
             </div>
@@ -412,32 +406,23 @@ export default function MyWordsPage() {
                         </span>
                       </div>
                       <div className={styles.rowActions}>
-                        <button
-                          className={styles.iconBtn}
-                          onClick={() => startEdit(w)}
-                          title="Edit word"
-                          aria-label="Edit word"
-                        >
-                          <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                            <path d="M11.5 2.5l2 2L6 12l-2.5.5L4 10l7.5-7.5z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round"/>
-                          </svg>
-                        </button>
+                        <IconButton onClick={() => startEdit(w)} title="Edit word" aria-label="Edit word">
+                          <EditIcon />
+                        </IconButton>
                         {deletingId === w.id ? (
-                          <div className={styles.confirmDelete}>
-                            <button className={styles.confirmYes} onClick={() => handleDelete(w.id)}>Delete</button>
-                            <button className={styles.confirmNo} onClick={() => setDeletingId(null)}>Cancel</button>
-                          </div>
+                          <ConfirmInline
+                            onConfirm={() => handleDelete(w.id)}
+                            onCancel={() => setDeletingId(null)}
+                          />
                         ) : (
-                          <button
-                            className={`${styles.iconBtn} ${styles.deleteBtn}`}
+                          <IconButton
+                            variant="danger"
                             onClick={() => setDeletingId(w.id)}
                             title="Delete word"
                             aria-label="Delete word"
                           >
-                            <svg width="15" height="15" viewBox="0 0 16 16" fill="none">
-                              <path d="M3 4h10M6 4V3a1 1 0 011-1h2a1 1 0 011 1v1M5 4l.5 9a1 1 0 001 1h3a1 1 0 001-1L11 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
-                            </svg>
-                          </button>
+                            <TrashIcon />
+                          </IconButton>
                         )}
                       </div>
                     </>

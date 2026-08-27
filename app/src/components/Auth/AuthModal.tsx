@@ -181,7 +181,7 @@ export default function AuthModal({ onClose, initialMode = "login", onSuccess }:
             </button>
 
             <p className={styles.switchText}>
-              Didn't get it?{" "}
+              Didn&apos;t get it?{" "}
               <button className={styles.switchBtn} onClick={backToDetails}>
                 Try again
               </button>

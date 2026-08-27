@@ -165,81 +165,10 @@
   margin-right: auto;
 }
 
-.btnPrimary,
-.btnSecondary {
-  padding: 0.55rem 1.05rem;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, opacity 0.15s;
-}
-
-.btnPrimary {
-  border: none;
-  background: var(--green-600);
-  color: #fff;
-}
-
-.btnPrimary:hover:not(:disabled) {
-  background: var(--green-700);
-}
-
-.btnSecondary {
-  border: 1px solid var(--border-card);
-  background: var(--white);
-  color: var(--text-secondary);
-}
-
-.btnSecondary:hover:not(:disabled) {
-  border-color: var(--gray-400);
-}
-
-.btnDanger,
-.btnDangerGhost {
-  padding: 0.55rem 1.05rem;
-  border-radius: 10px;
-  font-family: inherit;
-  font-size: 0.88rem;
-  font-weight: 700;
-  cursor: pointer;
-  transition: background 0.15s, border-color 0.15s, color 0.15s, opacity 0.15s;
-}
-
-.btnDanger {
-  border: none;
-  background: var(--red-500);
-  color: #fff;
-}
-
-.btnDanger:hover:not(:disabled) {
-  background: #dc2626;
-}
-
-.btnDangerGhost {
-  border: 1px solid var(--border-card);
-  background: var(--white);
-  color: var(--red-500);
-}
-
-.btnDangerGhost:hover:not(:disabled) {
-  border-color: var(--red-500);
-  background: var(--red-100);
-}
-
 .confirmText {
   font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
-}
-
-.btnPrimary:disabled,
-.btnSecondary:disabled,
-.btnDanger:disabled,
-.btnDangerGhost:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
 }
 
 /* ── Word list ── */
@@ -330,67 +259,6 @@
   flex-shrink: 0;
 }
 
-.iconBtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-}
-
-.iconBtn:hover {
-  background: var(--indigo-100);
-  color: var(--indigo-600);
-}
-
-.deleteBtn:hover {
-  background: var(--red-100);
-  color: var(--red-500);
-}
-
-.confirmDelete {
-  display: flex;
-  gap: 0.375rem;
-}
-
-.confirmYes {
-  padding: 0.3rem 0.7rem;
-  border-radius: 6px;
-  border: none;
-  background: var(--red-500);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.confirmYes:hover {
-  background: #dc2626;
-}
-
-.confirmNo {
-  padding: 0.3rem 0.7rem;
-  border-radius: 6px;
-  border: 1px solid var(--gray-200);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.confirmNo:hover {
-  border-color: var(--gray-400);
-}
-
 /* ── Inline edit ── */
 .editFields {
   display: flex;
@@ -447,17 +315,3 @@
   border-color: var(--gray-400);
 }
 
-/* ── Spinner ── */
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--green-500);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  margin-top: 30vh;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}

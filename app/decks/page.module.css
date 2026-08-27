@@ -123,49 +123,9 @@
   background: var(--gray-50);
 }
 
-.editBtn,
-.deleteBtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
-}
-
-.editBtn:hover {
-  background: var(--indigo-100);
-  color: var(--indigo-600);
-}
-
-.pinBtn {
-  width: 30px;
-  height: 30px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.15s, color 0.15s;
+/* keeps the pin action pushed to the left of the row */
+.pinLeft {
   margin-right: auto;
-}
-
-.pinBtn:hover {
-  background: var(--green-100);
-  color: var(--green-600);
-}
-
-.pinBtnActive {
-  color: var(--green-600);
-  background: var(--green-100);
 }
 
 .cardMeta {
@@ -181,48 +141,6 @@
   align-items: center;
   color: var(--green-600);
   transform: rotate(40deg);
-}
-
-.deleteBtn:hover {
-  background: var(--red-100);
-  color: var(--red-500);
-}
-
-.confirmDelete {
-  display: flex;
-  gap: 0.375rem;
-}
-
-.confirmYes {
-  padding: 0.3rem 0.7rem;
-  border-radius: 6px;
-  border: none;
-  background: var(--red-500);
-  color: #fff;
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.confirmYes:hover {
-  background: #dc2626;
-}
-
-.confirmNo {
-  padding: 0.3rem 0.7rem;
-  border-radius: 6px;
-  border: 1px solid var(--gray-200);
-  background: transparent;
-  color: var(--text-secondary);
-  font-size: 0.78rem;
-  font-weight: 600;
-  font-family: inherit;
-  cursor: pointer;
-}
-
-.confirmNo:hover {
-  border-color: var(--gray-400);
 }
 
 /* ── Empty state ─────────────────────────────────────────── */
@@ -253,20 +171,6 @@
 }
 
 /* ── States ──────────────────────────────────────────────── */
-.spinner {
-  width: 32px;
-  height: 32px;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--green-500);
-  border-radius: 50%;
-  animation: spin 0.7s linear infinite;
-  margin-top: 30vh;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
 .error {
   color: var(--red-500);
   font-size: 0.9rem;

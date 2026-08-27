@@ -11,6 +11,7 @@ export default function OnboardingGate({ children }: { children: React.ReactNode
 
   // Reset the local dismiss flag whenever the user changes (e.g. logout/login)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset dismiss flag on user change
     setDismissed(false);
   }, [user?.id]);
 
