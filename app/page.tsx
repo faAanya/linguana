@@ -13,6 +13,8 @@ export default function HomePage() {
   return (
     <main className={styles.main}>
       <div className={styles.hero}>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img className={styles.mascot} src="/capybara.png" alt="TalkiBara mascot" />
         <span className={styles.badge}>Welcome</span>
         <h1 className={styles.title}>
           {user ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to TalkiBara"}
