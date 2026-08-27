@@ -49,7 +49,7 @@ export async function translate({
       "Content-Type": "application/json",
       // Optional but recommended by OpenRouter for analytics / ranking
       "HTTP-Referer": process.env.APP_URL ?? "https://linguana.app",
-      "X-Title": "StudyWally",
+      "X-Title": "TalkiBara",
     },
     body: JSON.stringify({
       model: TRANSLATION_MODEL,
@@ -103,7 +103,7 @@ export async function translateOptions(
       Authorization: `Bearer ${apiKey}`,
       "Content-Type": "application/json",
       "HTTP-Referer": process.env.APP_URL ?? "https://linguana.app",
-      "X-Title": "StudyWally",
+      "X-Title": "TalkiBara",
     },
     body: JSON.stringify({
       model: TRANSLATION_MODEL,

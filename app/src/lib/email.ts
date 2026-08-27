@@ -21,15 +21,15 @@ export async function sendVerificationCode(to: string, code: string) {
   const from = process.env.GMAIL_USER;
 
   await getTransporter().sendMail({
-    from: `"StudyWally" <${from}>`,
+    from: `"TalkiBara" <${from}>`,
     to,
-    subject: `Your StudyWally verification code: ${code}`,
+    subject: `Your TalkiBara verification code: ${code}`,
     text: `Your verification code is ${code}. It expires in 10 minutes.`,
     html: `
       <div style="font-family: sans-serif; max-width: 420px; margin: 0 auto; padding: 24px;">
         <h2 style="color: #4338CA; margin-bottom: 8px;">Verify your email</h2>
         <p style="color: #4b5563; font-size: 15px;">
-          Enter this code in StudyWally to finish signing in:
+          Enter this code in TalkiBara to finish signing in:
         </p>
         <div style="font-size: 34px; font-weight: 800; letter-spacing: 8px;
                     color: #22C55E; text-align: center; padding: 20px 0;">

@@ -1,4 +1,4 @@
-# StudyWally — local JSON storage version
+# TalkiBara — local JSON storage version
 
 ## Setup
 

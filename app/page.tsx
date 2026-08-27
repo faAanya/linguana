@@ -15,7 +15,7 @@ export default function HomePage() {
       <div className={styles.hero}>
         <span className={styles.badge}>Welcome</span>
         <h1 className={styles.title}>
-          {user ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to StudyWally"}
+          {user ? `Welcome back, ${user.name.split(" ")[0]}!` : "Welcome to TalkiBara"}
         </h1>
         <p className={styles.subtitle}>
           Build your own vocabulary, turn it into flashcards, and practice the

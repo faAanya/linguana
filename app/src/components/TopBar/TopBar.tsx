@@ -33,7 +33,7 @@ export default function TopBar({ showNav = true }: Props) {
             </button>
           )}
 
-          <Link href="/" className={styles.logo}>StudyWally</Link>
+          <Link href="/" className={styles.logo}>TalkiBara</Link>
         </div>
 
         <div className={styles.right}>
