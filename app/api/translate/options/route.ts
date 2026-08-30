@@ -3,7 +3,7 @@ import { requireUser } from "@/app/src/lib/jwt";
 import { translateOptions } from "@/app/src/lib/translation";
 
 // POST /api/translate/options
-// Body: { text, sourceLang, targetLang }
+// Body: { text, sourceLang, targetLang, nativeLang? }
 // Returns: { options: string[] } — several candidate translations to choose from.
 export async function POST(request: NextRequest) {
   try {
@@ -12,7 +12,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { text, sourceLang, targetLang } = await request.json();
+    const { text, sourceLang, targetLang, nativeLang } = await request.json();
 
     if (!text?.trim()) {
       return NextResponse.json({ error: "No text to translate" }, { status: 400 });
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ options: [text.trim()] });
     }
 
-    const options = await translateOptions({ text: text.trim(), sourceLang, targetLang });
+    const options = await translateOptions({ text: text.trim(), sourceLang, targetLang, nativeLang });
     return NextResponse.json({ options });
   } catch (err) {
     console.error("Translate options error:", err);

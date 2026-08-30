@@ -78,9 +78,11 @@ export async function translate({
 }
 
 // Returns SEVERAL candidate translations (most common first) so the user can
-// pick which ones to save. De-duplicated, trimmed, capped at `max`.
+// pick which one to save. De-duplicated, trimmed, capped at `max`. Nouns are
+// gender-marked: an article where the target language uses one, otherwise a
+// short abbreviation written in the learner's native language.
 export async function translateOptions(
-  { text, sourceLang, targetLang }: TranslateParams,
+  { text, sourceLang, targetLang, nativeLang }: TranslateParams & { nativeLang?: string },
   max = 6
 ): Promise<string[]> {
   const apiKey = process.env.OPENROUTER_API_KEY;
@@ -88,12 +90,24 @@ export async function translateOptions(
 
   const source = langName(sourceLang);
   const target = langName(targetLang);
+  const native = langName(nativeLang ?? sourceLang);
 
   const systemPrompt =
-    "You are a precise bilingual dictionary. Given a word or short phrase, you " +
+    "You are a precise bilingual dictionary. Given a word or short phrase, " +
     `return up to ${max} common ${target} translations of it, ordered from most ` +
-    "to least common. Include distinct senses/synonyms when they exist. Reply " +
-    "with ONLY a JSON array of strings — no numbering, no explanations, no extra keys.";
+    "to least common. Include distinct senses/synonyms when they exist.\n\n" +
+    "Grammatical gender rules for NOUNS:\n" +
+    `- If ${target} normally marks a noun's gender with a definite article ` +
+    "(e.g. German der/die/das, French le/la, Spanish el/la, Italian il/la/lo, " +
+    "Portuguese o/a, Dutch de/het), include the correct article before the noun " +
+    '(e.g. "das Wort", "la palabra").\n' +
+    `- If ${target} marks grammatical gender but does NOT use articles ` +
+    "(e.g. Russian, Ukrainian, Polish, Czech, Belarusian, Slovak), append a short " +
+    `gender abbreviation in parentheses, written in ${native} (the learner's language) — ` +
+    'e.g. for an English speaker "(m.)", "(f.)", "(n.)".\n' +
+    "- For all other words (verbs, adjectives, non-gendered languages like English), " +
+    "add no article and no gender mark.\n\n" +
+    "Reply with ONLY a JSON array of strings — no numbering, no explanations, no extra keys.";
 
   const userPrompt = `Translate this from ${source} to ${target}:\n\n${text}`;
 

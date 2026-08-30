@@ -1,12 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Language } from "@/app/src/models/languages";
 import Link from "next/link";
 import { useAuth } from "@/app/src/components/Auth/AuthContext";
 import AuthModal from "@/app/src/components/Auth/AuthModal";
-import { LANGUAGES, LANGUAGE_MAP } from "@/app/src/models/languages";
 import Button from "@/app/src/components/common/Button/Button";
+import { LANGUAGES, LANGUAGE_MAP } from "@/app/src/models/languages";
 import styles from "./page.module.css";
 
 interface RecentWord {
@@ -22,8 +22,7 @@ const LS_TARGET = "addwords.targetLang";
 export default function AddWordsPage() {
   const { user } = useAuth();
 
-  // Language selection: null override means "use the user's default". Saved
-  // choices are loaded from localStorage after mount (below).
+  // Language selection: null override means "use the user's default".
   const [sourceOverride, setSourceOverride] = useState<string | null>(null);
   const [targetOverride, setTargetOverride] = useState<string | null>(null);
 
@@ -35,6 +34,7 @@ export default function AddWordsPage() {
 
   const sourceLang = sourceOverride ?? defaultSource;
   const targetLang = targetOverride ?? defaultTarget;
+  const nativeLang = user?.nativeLanguages?.[0] ?? defaultSource;
 
   // Load the saved language preferences once, on the client.
   useEffect(() => {
@@ -62,79 +62,61 @@ export default function AddWordsPage() {
   }, [user]);
 
   const [word, setWord] = useState("");
-  const [candidates, setCandidates] = useState<string[]>([]);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [translation, setTranslation] = useState(""); // the single value in the box
+  const [candidates, setCandidates] = useState<string[]>([]); // alternatives below
   const [translating, setTranslating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [recent, setRecent] = useState<RecentWord[]>([]);
   const [showAuth, setShowAuth] = useState(false);
 
-  const translatedFor = useRef<string>("");
-
-  const runTranslate = useCallback(
-    async (text: string) => {
-      const trimmed = text.trim();
-      if (!trimmed) return;
-      if (!user) { setShowAuth(true); return; }
-
-      if (sourceLang === targetLang) {
-        setCandidates([trimmed]);
-        setSelected(trimmed);
-        translatedFor.current = trimmed;
-        return;
-      }
-
-      setTranslating(true);
-      setError(null);
-      try {
-        const res = await fetch("/api/translate/options", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ text: trimmed, sourceLang, targetLang }),
-        });
-        if (!res.ok) {
-          const data = await res.json();
-          throw new Error(data.error ?? "Translation failed");
-        }
-        const { options: opts } = await res.json();
-        const list: string[] = Array.isArray(opts) ? opts : [];
-        setCandidates(list);
-        // Pre-select the most common translation
-        setSelected(list[0] ?? null);
-        translatedFor.current = trimmed;
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Translation failed");
-      } finally {
-        setTranslating(false);
-      }
-    },
-    [sourceLang, targetLang, user]
-  );
-
-  // Auto-translate shortly after the user stops typing.
-  useEffect(() => {
+  // Fetch translations ONLY when the user asks (they may not know the word).
+  const runTranslate = async () => {
     const trimmed = word.trim();
-    if (!trimmed || !user) return;
-    if (trimmed === translatedFor.current) return;
-    const t = setTimeout(() => runTranslate(trimmed), 650);
-    return () => clearTimeout(t);
-  }, [word, runTranslate, user]);
+    if (!trimmed) return;
+    if (!user) { setShowAuth(true); return; }
+
+    if (sourceLang === targetLang) {
+      setTranslation(trimmed);
+      setCandidates([]);
+      return;
+    }
+
+    setTranslating(true);
+    setError(null);
+    try {
+      const res = await fetch("/api/translate/options", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text: trimmed, sourceLang, targetLang, nativeLang }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Translation failed");
+      }
+      const { options: opts } = await res.json();
+      const list: string[] = Array.isArray(opts) ? opts : [];
+      setCandidates(list);
+      // Put the single best translation in the box; the rest stay as options.
+      if (list[0]) setTranslation(list[0]);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Translation failed");
+    } finally {
+      setTranslating(false);
+    }
+  };
 
   const changeSource = (code: string) => {
     setSourceOverride(code);
     persist(LS_SOURCE, code);
-    translatedFor.current = "";
     setCandidates([]);
-    setSelected(null);
   };
 
   const changeTarget = (code: string) => {
     setTargetOverride(code);
     persist(LS_TARGET, code);
-    translatedFor.current = "";
+    setTranslation("");
     setCandidates([]);
-    setSelected(null);
   };
 
   const swap = () => {
@@ -142,19 +124,13 @@ export default function AddWordsPage() {
     setTargetOverride(sourceLang);
     persist(LS_SOURCE, targetLang);
     persist(LS_TARGET, sourceLang);
-    setWord(selected ?? candidates[0] ?? "");
+    setWord(translation);
+    setTranslation(word);
     setCandidates([]);
-    setSelected(null);
-    translatedFor.current = "";
-  };
-
-  // Only one translation can be chosen at a time (click again to deselect).
-  const selectOption = (opt: string) => {
-    setSelected((prev) => (prev === opt ? null : opt));
   };
 
   const handleSave = async () => {
-    if (!word.trim() || !selected) return;
+    if (!word.trim() || !translation.trim()) return;
     if (!user) { setShowAuth(true); return; }
 
     setSaving(true);
@@ -163,7 +139,12 @@ export default function AddWordsPage() {
       const res = await fetch("/api/words", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ word: word.trim(), translation: selected, sourceLang, targetLang }),
+        body: JSON.stringify({
+          word: word.trim(),
+          translation: translation.trim(),
+          sourceLang,
+          targetLang,
+        }),
       });
       if (!res.ok) {
         const data = await res.json();
@@ -177,9 +158,8 @@ export default function AddWordsPage() {
       ]);
 
       setWord("");
+      setTranslation("");
       setCandidates([]);
-      setSelected(null);
-      translatedFor.current = "";
     } catch (err) {
       setError(err instanceof Error ? err.message : "Something went wrong");
     } finally {
@@ -187,7 +167,9 @@ export default function AddWordsPage() {
     }
   };
 
-  const canSave = !!word.trim() && !!selected && !saving;
+  const canSave = !!word.trim() && !!translation.trim() && !saving;
+  // Options that aren't already the chosen translation
+  const otherOptions = candidates.filter((c) => c !== translation);
 
   return (
     <>
@@ -195,8 +177,8 @@ export default function AddWordsPage() {
         <div className={styles.header}>
           <h1 className={styles.title}>Add words</h1>
           <p className={styles.subtitle}>
-            Type a word, pick the translations you want, and save them to{" "}
-            <Link href="/words" className={styles.inlineLink}>your collection</Link>.
+            Type a word and its translation — or press Translate if you don&rsquo;t know it —
+            then save it to <Link href="/words" className={styles.inlineLink}>your collection</Link>.
           </p>
         </div>
 
@@ -237,7 +219,7 @@ export default function AddWordsPage() {
                 value={word}
                 onChange={(e) => setWord(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") { e.preventDefault(); runTranslate(word); }
+                  if (e.key === "Enter") { e.preventDefault(); runTranslate(); }
                 }}
                 placeholder="Enter a word or phrase…"
                 rows={3}
@@ -250,40 +232,44 @@ export default function AddWordsPage() {
               <label className={styles.paneLabel}>
                 {LANGUAGE_MAP[targetLang]?.name ?? targetLang}
                 {translating && <span className={styles.translatingDot}>· translating…</span>}
-                {!translating && candidates.length > 0 && (
-                  <span className={styles.pickHint}>· pick one</span>
-                )}
               </label>
-              <div className={styles.optionsBox}>
-                {candidates.length === 0 ? (
-                  <span className={styles.optionsEmpty}>
-                    {translating ? "Finding translations…" : "Translations appear here — tap the ones to save"}
-                  </span>
-                ) : (
-                  <div className={styles.optionChips}>
-                    {candidates.map((opt) => (
-                      <button
-                        key={opt}
-                        type="button"
-                        className={`${styles.optionChip} ${selected === opt ? styles.optionChipSelected : ""}`}
-                        onClick={() => selectOption(opt)}
-                        aria-pressed={selected === opt}
-                      >
-                        {opt}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <textarea
+                className={`${styles.textarea} ${styles.textareaOut}`}
+                value={translation}
+                onChange={(e) => setTranslation(e.target.value)}
+                placeholder="Type the translation, or press Translate"
+                rows={3}
+                maxLength={120}
+              />
             </div>
           </div>
+
+          {/* Alternative translations — click one to put it in the box */}
+          {otherOptions.length > 0 && (
+            <div className={styles.options}>
+              <span className={styles.optionsLabel}>Other translations</span>
+              <div className={styles.optionChips}>
+                {otherOptions.map((opt) => (
+                  <button
+                    key={opt}
+                    type="button"
+                    className={styles.optionChip}
+                    onClick={() => setTranslation(opt)}
+                    title="Use this translation"
+                  >
+                    {opt}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {error && <p className={styles.error}>{error}</p>}
 
           <div className={styles.actions}>
             <Button
               variant="secondary"
-              onClick={() => runTranslate(word)}
+              onClick={runTranslate}
               disabled={!word.trim() || translating}
             >
               {translating ? "Translating…" : "Translate"}
